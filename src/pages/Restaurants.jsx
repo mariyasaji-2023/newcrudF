@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios'; // Import Axios
 import res from '/images/res3.jpg';
+import { CiEdit } from "react-icons/ci";
+
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -20,7 +22,7 @@ const Restaurants = () => {
         setRestaurants([]); // Fallback to an empty array
       }
     };
-  
+
     fetchRestaurants();
   }, []);
 
@@ -47,14 +49,21 @@ const Restaurants = () => {
           restaurants.map((restaurant) => (
             <div key={restaurant._id} className="bg-slate-200 p-3">
               <div className='min-w-10 relative '>
-              <img className='rounded aspect-square  w-screen' src={`http://localhost:3001/public${restaurant.logo}`} alt={restaurant.name} />
+                <img className='rounded aspect-square  w-screen' src={`http://localhost:3001/public${restaurant.logo}`} alt={restaurant.name} />
               </div>
               <div className='bg-slate-700 rounded text-white p-2 mt-1'>
-              <h1 className='mt-2 font-bold  flex justify-center'>
-                <Link to={`/restaurant/${restaurant._id}`}>{restaurant.restaurantName}</Link>
-              </h1>
-              <p className='mt-2   flex justify-center'>Created At : {formatDate(restaurant.createdAt)}</p>
-              <p className='mt-1   flex justify-center'>Updated At : {formatDate(restaurant.updatedAt)}</p>
+                <div>
+                <p className='mt-2  text-xs  flex justify-start'>Created At : {formatDate(restaurant.createdAt)}</p>
+                </div>
+                
+               <div className='flex justify-between'>
+               <h1 className='mt-2 font-bold  '>
+                  <Link to={`/restaurant/${restaurant._id}`}>{restaurant.restaurantName}</Link>
+                </h1>
+               <button className=' '><CiEdit /> </button>
+               </div>
+                
+                <p className='mt-1  text-xs flex justify-end'>Updated At : {formatDate(restaurant.updatedAt)}</p>
               </div>
             </div>
           ))
