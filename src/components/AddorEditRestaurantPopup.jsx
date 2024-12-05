@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const PopupComponent = ({ restaurant, mode, closePopup, updateRestaurantList }) => {
+const AddorEditRestaurantPopup = ({ restaurant, mode, closePopup, updateRestaurantList }) => {
   const [restaurantName, setRestaurantName] = useState(restaurant ? restaurant.restaurantName : '');
   const [logo, setLogo] = useState(null); // Changed to store the file
   const [error, setError] = useState(''); // State for validation errors
@@ -10,16 +10,14 @@ const PopupComponent = ({ restaurant, mode, closePopup, updateRestaurantList }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate restaurant name and logo
+    // Validate restaurant name only (image is optional)
     if (!restaurantName) {
       setError('Restaurant name is required.');
       return;
     }
 
-    if (!logo && mode === 'add') {
-      setError('Logo is required for adding a restaurant.');
-      return;
-    }
+    const normalizedRestaurantName = restaurantName.trim().toLowerCase();
+
 
     setError(''); // Clear any previous errors
 
@@ -27,7 +25,7 @@ const PopupComponent = ({ restaurant, mode, closePopup, updateRestaurantList }) 
     formData.append('restaurantName', restaurantName);
 
     if (logo) {
-      formData.append('logo', logo);
+      formData.append('logo', logo); // Only append logo if it's provided
     }
 
     try {
@@ -53,7 +51,13 @@ const PopupComponent = ({ restaurant, mode, closePopup, updateRestaurantList }) 
 
       closePopup(); // Close the popup after submission
     } catch (err) {
-      console.error('Error submitting the restaurant:', err);
+      if (err.response && err.response.data && err.response.data.message) {
+        // Display backend error message
+        setError(err.response.data.message);
+      } else {
+        console.error('Error submitting the restaurant:', err);
+        setError('An unexpected error occurred.');
+      }
     }
   };
 
@@ -93,7 +97,7 @@ const PopupComponent = ({ restaurant, mode, closePopup, updateRestaurantList }) 
           </div>
 
           <div className="mb-4">
-            <label htmlFor="logo" className="block text-gray-700">Logo</label>
+            <label htmlFor="logo" className="block text-gray-700">Logo (optional)</label>
             <input
               type="file"
               id="logo"
@@ -119,4 +123,4 @@ const PopupComponent = ({ restaurant, mode, closePopup, updateRestaurantList }) 
   );
 };
 
-export default PopupComponent;
+export default AddorEditRestaurantPopup;
