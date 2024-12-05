@@ -113,27 +113,35 @@ const Restaurants = () => {
 
   return (
     <div>
-      <div className="flex justify-between mx-8 mt-6 items-center">
-        <input
-          type="text"
-          className="focus:outline-none p-4 rounded-full shadow-md text-lg w-1/3 bg-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-          placeholder="Search Restaurants ..."
-        />
-        <h1 className="text-4xl font-bold">ALL RESTAURANTS</h1>
-        <button
-          onClick={handleAddClick}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full px-6 py-3 shadow-lg transform transition-all duration-300 hover:scale-105"
-        >
-          <MdOutlineAddBusiness />
-        </button>
+      <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 mx-8 mt-6 bg-white p-6 rounded-2xl shadow-lg">
+        <div className="w-full md:w-1/3">
+          <input
+            type="text"
+            className="w-full focus:outline-none p-4 rounded-full shadow-md text-lg bg-gray-50 placeholder-gray-400 focus:ring-2 focus:ring-green-500 transition-all duration-300 hover:shadow-xl"
+            placeholder="Search Restaurants ..."
+          />
+        </div>
+
+        <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight text-center flex-grow">
+          ALL RESTAURANTS
+        </h1>
+
+        <div className="w-full md:w-1/3 flex justify-end">
+          <button
+            onClick={handleAddClick}
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full px-6 py-3 shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center group"
+          >
+            <MdOutlineAddBusiness className="text-2xl  transition-transform duration-300" />
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 mx-8">
+      <div className="grid grid-cols-1 container sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 mx-auto">
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">{error}</p>}
         {restaurants.length > 0 ? (
           restaurants.map((restaurant) => (
-            <div key={restaurant._id} className="bg-white rounded-xl mb-4 shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105 overflow-hidden">
+            <div key={restaurant._id} className="bg-slate-100 rounded-xl mb-4 shadow-xl hover:shadow-2xl transform transition-all duration-500 hover:scale-105 overflow-hidden">
               <div className="relative">
                 <Link to={`/restaurant/${restaurant._id}`}>
                   <img

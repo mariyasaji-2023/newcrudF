@@ -66,29 +66,78 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 mt-6 gap-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
       <MessagePopup />
-
-      {/* Restaurants Section */}
-      <div className="mx-auto bg-white rounded-xl shadow-lg p-6 flex flex-col items-center justify-between">
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-4xl font-extrabold text-gray-800">Restaurants</h1>
-          <img className="max-h-48 lg:max-h-60 w-full object-cover rounded-lg my-4" src={res} alt="Restaurant" />
-          <h2 className="text-lg font-bold text-gray-700 mt-6">Total</h2>
-          <h3 className="text-6xl font-extrabold text-green-800 mt-2">{totalRestaurants}</h3>
-          {error && <div className="text-red-500 mt-2">Error: {error}</div>}
-          <p className="font-medium text-gray-500 mt-2">(restaurants added till now)</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        {/* Restaurants Section */}
+        <div className="transform transition duration-500 hover:scale-105 hover:rotate-1 hover:shadow-2xl 
+          bg-white rounded-2xl shadow-xl border-2 border-gray-100 
+          overflow-hidden relative perspective-1000 hover:translate-y-[-10px]">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-100 via-white to-green-100 opacity-20"></div>
+          
+          <div className="relative z-10 p-6 flex flex-col items-center text-center">
+            <h1 className="text-4xl font-extrabold text-green-900 mb-4 tracking-tight">
+              Restaurants
+            </h1>
+            
+            <div className="w-full mb-4 overflow-hidden rounded-xl shadow-lg transform transition duration-300 hover:scale-110">
+              <img 
+                className="w-full h-48 lg:h-60 object-cover" 
+                src={res} 
+                alt="Restaurant" 
+              />
+            </div>
+            
+            <div className="bg-green-50 rounded-xl p-4 mt-4 shadow-inner">
+              <h2 className="text-lg font-semibold text-green-800">Total Restaurants</h2>
+              <h3 className="text-6xl font-black text-green-900 mt-2">
+                {totalRestaurants}
+              </h3>
+            </div>
+            
+            {error && (
+              <div className="text-red-500 mt-2 bg-red-50 p-2 rounded-lg">
+                Error: {error}
+              </div>
+            )}
+            
+            <p className="text-gray-500 mt-2 italic">
+              (restaurants added till now)
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Dishes Section */}
-      <div className="mx-auto bg-white rounded-xl shadow-lg p-6 flex flex-col items-center justify-between">
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-4xl font-extrabold text-gray-800">Dishes</h1>
-          <img className="max-h-48 lg:max-h-60 w-full object-cover rounded-lg my-4" src={dish} alt="Dish" />
-          <h2 className="text-lg font-bold text-gray-700 mt-6">Total</h2>
-          <h3 className="text-6xl font-extrabold text-red-800 mt-2">{totalDishes}</h3>
-          <p className="font-medium text-gray-500 mt-2">(dishes added till now)</p>
+        {/* Dishes Section */}
+        <div className="transform transition duration-500 hover:scale-105 hover:-rotate-1 hover:shadow-2xl 
+          bg-white rounded-2xl shadow-xl border-2 border-gray-100 
+          overflow-hidden relative perspective-1000 hover:translate-y-[-10px]">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-100 via-white to-red-100 opacity-20"></div>
+          
+          <div className="relative z-10 p-6 flex flex-col items-center text-center">
+            <h1 className="text-4xl font-extrabold text-red-900 mb-4 tracking-tight">
+              Dishes
+            </h1>
+            
+            <div className="w-full mb-4 overflow-hidden rounded-xl shadow-lg transform transition duration-300 hover:scale-110">
+              <img 
+                className="w-full h-48 lg:h-60 object-cover" 
+                src={dish} 
+                alt="Dish" 
+              />
+            </div>
+            
+            <div className="bg-red-50 rounded-xl p-4 mt-4 shadow-inner">
+              <h2 className="text-lg font-semibold text-red-800">Total Dishes</h2>
+              <h3 className="text-6xl font-black text-red-900 mt-2">
+                {totalDishes}
+              </h3>
+            </div>
+            
+            <p className="text-gray-500 mt-2 italic">
+              (dishes added till now)
+            </p>
+          </div>
         </div>
       </div>
     </div>

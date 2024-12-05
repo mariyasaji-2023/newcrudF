@@ -33,7 +33,7 @@ const AddorEditRestaurantPopup = ({ restaurant, mode, closePopup, updateRestaura
         // Edit logic: PUT request
         formData.append('id', restaurant._id); // Pass restaurant ID for update
 
-        const response = await axios.put('http://localhost:3001/api/restaurants/editRestaurant', formData, {
+        const response = await axios.put(`http://localhost:3001/api/restaurants/editRestaurant/${restaurant._id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
 
