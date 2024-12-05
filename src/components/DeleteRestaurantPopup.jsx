@@ -49,7 +49,7 @@ const DeleteRestaurantPopup = ({ restaurant, closePopup, updateRestaurantList })
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="deleteId" className="block text-gray-700">Delete ID</label>
+            <label htmlFor="deleteId" className="block text-gray-700">Only Admin can delete</label>
             <input
               type="text"
               id="deleteId"
