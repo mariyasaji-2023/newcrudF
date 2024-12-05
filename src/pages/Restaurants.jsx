@@ -1,69 +1,105 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios'; // Import Axios
-import res from '/images/res3.jpg';
+import React, { useState, useEffect } from 'react';
 import { CiEdit } from "react-icons/ci";
-
+import { MdOutlineAddBusiness } from "react-icons/md";
+import axios from 'axios';
+import PopupComponent from '../components/PopupComponent';
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [mode, setMode] = useState('add'); // 'add' or 'edit'
 
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/restaurants/allRestaurants');
-        setRestaurants(response.data.restaurants || []); // Use the correct key 'restaurants'
+        setRestaurants(response.data.restaurants || []);
         setLoading(false);
       } catch (err) {
         setError(err.message);
         setLoading(false);
-        setRestaurants([]); // Fallback to an empty array
+        setRestaurants([]);
       }
     };
 
     fetchRestaurants();
   }, []);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString(); // You can format the date as per your requirements
+  const handleEditClick = (restaurant) => {
+    setSelectedRestaurant(restaurant);
+    setMode('edit');
+    setShowPopup(true);
+  };
+
+  const handleAddClick = () => {
+    setMode('add');
+    setSelectedRestaurant(null);
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+    setSelectedRestaurant(null);
+  };
+
+  // Function to update the restaurant list after add/edit
+  const updateRestaurantList = (newRestaurant) => {
+    if (mode === 'edit') {
+      // Update the specific restaurant in the list
+      setRestaurants((prevRestaurants) =>
+        prevRestaurants.map((restaurant) =>
+          restaurant._id === newRestaurant._id ? newRestaurant : restaurant
+        )
+      );
+    } else if (mode === 'add') {
+      // Append the new restaurant to the list
+      setRestaurants((prevRestaurants) => [...prevRestaurants, newRestaurant]);
+    }
   };
 
   return (
     <div>
-      <div className="flex justify-between mx-8 mt-6">
+      <div className="flex justify-between mx-8 mt-6 items-center">
         <input
           type="text"
-          className="focus:outline-none p-2 rounded"
+          className="focus:outline-none p-4 rounded-full shadow-md text-lg w-1/3 bg-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-green-500 transition-all duration-300"
           placeholder="Search Restaurants ..."
         />
         <h1 className="text-4xl font-bold">ALL RESTAURANTS</h1>
-        <button className="bg-green-500 font-semibold rounded text-white py-2 px-4">+ Add Restaurant</button>
+        <button 
+          onClick={handleAddClick} 
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full px-6 py-3 shadow-lg transform transition-all duration-300 hover:scale-105">
+          <MdOutlineAddBusiness />
+        </button>
       </div>
-      <div className="grid grid-cols-4 mt-6 mx-2 gap-4">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 mx-8">
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">{error}</p>}
         {Array.isArray(restaurants) && restaurants.length > 0 ? (
           restaurants.map((restaurant) => (
-            <div key={restaurant._id} className="bg-slate-200 p-3">
-              <div className='min-w-10 relative '>
-                <img className='rounded aspect-square  w-screen' src={`http://localhost:3001/public${restaurant.logo}`} alt={restaurant.name} />
+            <div key={restaurant._id} className="bg-white rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105">
+              <div className="relative">
+                <img
+                  className="rounded-t-lg w-full h-40 object-cover"
+                  src={`http://localhost:3001/public${restaurant.logo}`}
+                  alt={restaurant.name}
+                />
+                <button
+                  className="absolute top-2 right-2 p-2 bg-green-700 text-white rounded-full hover:bg-green-800 transition duration-300"
+                  onClick={() => handleEditClick(restaurant)}
+                >
+                  <CiEdit />
+                </button>
               </div>
-              <div className='bg-slate-700 rounded text-white p-2 mt-1'>
-                <div>
-                <p className='mt-2  text-xs  flex justify-start'>Created At : {formatDate(restaurant.createdAt)}</p>
-                </div>
-                
-               <div className='flex justify-between'>
-               <h1 className='mt-2 font-bold  '>
-                  <Link to={`/restaurant/${restaurant._id}`}>{restaurant.restaurantName}</Link>
-                </h1>
-               <button className=' '><CiEdit /> </button>
-               </div>
-                
-                <p className='mt-1  text-xs flex justify-end'>Updated At : {formatDate(restaurant.updatedAt)}</p>
+              <div className="p-4">
+                <h2 className="font-semibold text-xl text-gray-800">
+                  {restaurant.restaurantName}
+                </h2>
               </div>
             </div>
           ))
@@ -71,6 +107,15 @@ const Restaurants = () => {
           !loading && <p>No restaurants available</p>
         )}
       </div>
+
+      {showPopup && (
+        <PopupComponent 
+          restaurant={selectedRestaurant} 
+          mode={mode} 
+          closePopup={closePopup}
+          updateRestaurantList={updateRestaurantList} // Pass the update function
+        />
+      )}
     </div>
   );
 };

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import res from '/images/res4.jpg';
 import dish from '/images/dish2.jpg';
+import MessagePopup from '../components/MessagePopup';
 
 const Home = () => {
   const [totalRestaurants, setTotalRestaurants] = useState(0);
   const [totalDishes, setTotalDishes] = useState(0);
-
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -14,32 +14,27 @@ const Home = () => {
         const response = await fetch('http://localhost:3001/api/restaurants/totalRestaurants', {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         });
 
         if (!response.ok) {
-          // If the server response is not OK (status is not in the 200-299 range)
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Full response data:', data);
 
-        // Check if totalRestaurants exists in the response
         if (data && data.totalRestaurants !== undefined) {
           setTotalRestaurants(data.totalRestaurants);
         } else {
-          console.error('No totalRestaurants found in response');
           setError('No restaurant count found');
         }
       } catch (error) {
-        console.error('Detailed error fetching total restaurants:', error);
         setError(error.message);
         setTotalRestaurants(0);
       }
     };
-    // Fetch total number of dishes
+
     const fetchTotalDishes = async () => {
       try {
         const response = await fetch('http://localhost:3001/api/restaurants/totalDishes', {
@@ -54,13 +49,13 @@ const Home = () => {
         }
 
         const data = await response.json();
+
         if (data && data.totalDishes !== undefined) {
           setTotalDishes(data.totalDishes);
         } else {
           setError('No dish count found');
         }
       } catch (error) {
-        console.error('Error fetching total dishes:', error);
         setError(error.message);
         setTotalDishes(0);
       }
@@ -70,55 +65,34 @@ const Home = () => {
     fetchTotalDishes();
   }, []);
 
-
   return (
-    <div className="grid lg:grid-cols-2  mt-3 ">
-      <div className="mx-auto lg:mx-12  bg-white">
-        <div>
-          <div className="flex font-extrabold text-4xl lg:m-4 items-center justify-center">
-            <h1>Restaurants</h1>
-          </div>
-          <div>
-            <img className="max-h-40 lg:max-h-60 w-screen px-10  overflow-hidden" src={res} alt="" />
-          </div>
-          <div className='flex items-center justify-center mt-6' >
-            <h2 className='text-lg font-bold'>Total</h2>
-          </div>
-          <div className='flex items-center justify-center font-extrabold text-green-900 text-6xl'>
-            <h3>{totalRestaurants}</h3>
-          </div>
-          {error && (
-            <div className="text-red-500">
-              Error: {error}
-            </div>
-          )}
-          <div className='flex items-center justify-center font-medium mb-3'>
-            <p>(restaurants added till now)</p>
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 mt-6 gap-8">
+      <MessagePopup />
+
+      {/* Restaurants Section */}
+      <div className="mx-auto bg-white rounded-xl shadow-lg p-6 flex flex-col items-center justify-between">
+        <div className="flex flex-col items-center text-center">
+          <h1 className="text-4xl font-extrabold text-gray-800">Restaurants</h1>
+          <img className="max-h-48 lg:max-h-60 w-full object-cover rounded-lg my-4" src={res} alt="Restaurant" />
+          <h2 className="text-lg font-bold text-gray-700 mt-6">Total</h2>
+          <h3 className="text-6xl font-extrabold text-green-800 mt-2">{totalRestaurants}</h3>
+          {error && <div className="text-red-500 mt-2">Error: {error}</div>}
+          <p className="font-medium text-gray-500 mt-2">(restaurants added till now)</p>
         </div>
       </div>
-      {/* Second column remains unchanged */}
-      <div className="mx-auto lg:mx-12  bg-white">
-        <div>
-          <div className="flex font-extrabold text-4xl lg:m-4 items-center justify-center">
-            <h1>Dishes</h1>
-          </div>
-          <div className='rounded-md'> 
-            <img className="max-h-40 lg:max-h-60 w-screen px-10  overflow-hidden" src={dish} alt="" />
-          </div>
-          <div className='flex items-center justify-center mt-6'>
-            <h2 className='text-lg font-bold'>Total</h2>
-          </div>
-          <div className='flex items-center justify-center font-extrabold  text-red-900  text-6xl '>
-            <h3>{totalDishes}</h3>
-          </div>
-          <div className='flex items-center justify-center font-medium mb-3 '>
-            <p>(dishes added till now)</p>
-          </div>
+
+      {/* Dishes Section */}
+      <div className="mx-auto bg-white rounded-xl shadow-lg p-6 flex flex-col items-center justify-between">
+        <div className="flex flex-col items-center text-center">
+          <h1 className="text-4xl font-extrabold text-gray-800">Dishes</h1>
+          <img className="max-h-48 lg:max-h-60 w-full object-cover rounded-lg my-4" src={dish} alt="Dish" />
+          <h2 className="text-lg font-bold text-gray-700 mt-6">Total</h2>
+          <h3 className="text-6xl font-extrabold text-red-800 mt-2">{totalDishes}</h3>
+          <p className="font-medium text-gray-500 mt-2">(dishes added till now)</p>
         </div>
       </div>
     </div>
-  )
+  );
 };
 
 export default Home;
