@@ -24,6 +24,11 @@ const Restaurants = () => {
     fetchRestaurants();
   }, []);
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString(); // You can format the date as per your requirements
+  };
+
   return (
     <div>
       <div className="flex justify-between mx-8 mt-6">
@@ -41,13 +46,15 @@ const Restaurants = () => {
         {Array.isArray(restaurants) && restaurants.length > 0 ? (
           restaurants.map((restaurant) => (
             <div key={restaurant._id} className="bg-slate-200 p-3">
-              <div className='min-w-10 '>
-              <img className='rounded' src={res} alt={restaurant.name} />
+              <div className='min-w-10 relative '>
+              <img className='rounded aspect-square  w-screen' src={`http://localhost:3001/public${restaurant.logo}`} alt={restaurant.name} />
               </div>
-              <div className='bg-green-500 rounded text-white p-2 mt-1'>
+              <div className='bg-slate-700 rounded text-white p-2 mt-1'>
               <h1 className='mt-2 font-bold  flex justify-center'>
-                <Link to={`/restaurant/${restaurant._id}`}>{restaurant.name}</Link>
+                <Link to={`/restaurant/${restaurant._id}`}>{restaurant.restaurantName}</Link>
               </h1>
+              <p className='mt-2   flex justify-center'>Created At : {formatDate(restaurant.createdAt)}</p>
+              <p className='mt-1   flex justify-center'>Updated At : {formatDate(restaurant.updatedAt)}</p>
               </div>
             </div>
           ))
