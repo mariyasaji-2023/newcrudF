@@ -4,6 +4,7 @@ import { CiEdit } from "react-icons/ci";
 import { MdOutlineAddBusiness } from "react-icons/md";
 import { MdDelete } from "react-icons/md";
 import axios from 'axios';
+import SearchRestaurant from '../components/SearchRestaurant';
 import AddorEditRestaurantPopup from '../components/AddorEditRestaurantPopup';
 import DeleteRestaurantPopup from '../components/DeleteRestaurantPopup';
 
@@ -11,6 +12,7 @@ const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
@@ -20,25 +22,23 @@ const Restaurants = () => {
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/restaurants/allRestaurants');
-
-        console.log('Raw response:', response.data);
-
-        // Ensure restaurants is an array
-        const restaurantsArray = Array.isArray(response.data.restaurants)
+        let restaurantsArray = Array.isArray(response.data.restaurants)
           ? response.data.restaurants
           : response.data || [];
 
-        console.log('Restaurants array:', restaurantsArray);
+        // Filter restaurants based on the debounced query
+        if (debouncedQuery) {
+          restaurantsArray = restaurantsArray.filter((restaurant) =>
+            restaurant.restaurantName.toLowerCase().includes(debouncedQuery.toLowerCase())
+          );
+        }
 
-        // Sort restaurants by the most recently updated or added first
+        // Sort by most recently updated or added
         const sortedRestaurants = restaurantsArray.sort((a, b) => {
-          // Compare updatedAt first, if they're the same, compare createdAt
           const dateA = new Date(a.updatedAt || a.createdAt);
           const dateB = new Date(b.updatedAt || b.createdAt);
           return dateB - dateA;
         });
-
-        console.log('Sorted restaurants:', sortedRestaurants);
 
         setRestaurants(sortedRestaurants);
         setLoading(false);
@@ -51,7 +51,7 @@ const Restaurants = () => {
     };
 
     fetchRestaurants();
-  }, []);
+  }, [debouncedQuery]);
 
   const handleEditClick = (restaurant) => {
     setSelectedRestaurant(restaurant);
@@ -78,7 +78,6 @@ const Restaurants = () => {
 
   const updateRestaurantList = (updatedRestaurant) => {
     if (mode === 'edit') {
-      // Update the specific restaurant in the list
       setRestaurants((prevRestaurants) =>
         prevRestaurants.map((restaurant) =>
           restaurant._id === updatedRestaurant._id ? updatedRestaurant : restaurant
@@ -89,7 +88,6 @@ const Restaurants = () => {
         })
       );
     } else if (mode === 'add') {
-      // Append the new restaurant to the list and re-sort
       setRestaurants((prevRestaurants) => {
         const updatedRestaurants = [updatedRestaurant, ...prevRestaurants];
         return updatedRestaurants.sort((a, b) => {
@@ -99,7 +97,6 @@ const Restaurants = () => {
         });
       });
     } else if (mode === 'delete') {
-      // Remove the restaurant from the list based on its ID
       setRestaurants((prevRestaurants) =>
         prevRestaurants.filter((restaurant) => restaurant._id !== selectedRestaurant._id)
       );
@@ -115,11 +112,8 @@ const Restaurants = () => {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 mx-8 mt-6 bg-white p-6 rounded-2xl shadow-lg">
         <div className="w-full md:w-1/3">
-          <input
-            type="text"
-            className="w-full focus:outline-none p-4 rounded-full shadow-md text-lg bg-gray-50 placeholder-gray-400 focus:ring-2 focus:ring-green-500 transition-all duration-300 hover:shadow-xl"
-            placeholder="Search Restaurants ..."
-          />
+          {/* SearchRestaurant Component */}
+          <SearchRestaurant onSearch={setDebouncedQuery} />
         </div>
 
         <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight text-center flex-grow">
