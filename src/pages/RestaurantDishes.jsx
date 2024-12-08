@@ -58,7 +58,7 @@ const RestaurantDishes = ({ restaurantName, restaurantId }) => {
       {/* Main Content Section */}
       <div className="flex flex-col md:flex-row mt-6 mx-8 gap-6">
         {/* Add Category Section (Left Column) */}
-        <div className="md:w-1/4 bg-white p-6 rounded-2xl shadow-lg border border-gray-300">
+        <div className="md:w-1/5 bg-white p-6 rounded-2xl shadow-lg border border-gray-300">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
             Add Categories
           </h2>
@@ -83,38 +83,53 @@ const RestaurantDishes = ({ restaurantName, restaurantId }) => {
 
         {/* Dish Cards Section (Right Column) */}
         <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {/* Example Dish Card */}
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((dish, index) => (
-            <div
-              key={index}
-              className="relative bg-slate-100 p-4 rounded-xl shadow-md hover:shadow-lg transition-transform duration-300"
-            >
-              {/* Edit Icon */}
-              <button
-                onClick={() => handleEditDishClick(dish)}
-                className="absolute top-2 right-2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition duration-300 transform hover:scale-110"
-              >
-                <MdEdit />
-              </button>
+  {/* Example Dish Card */}
+  {[1, 2, 3, 4, 5, 6, 7, 8].map((dish, index) => (
+    <div
+      key={index}
+      className="relative bg-white p-6  rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 h-[350px]"
+    >
+      {/* Edit Icon */}
+      <button
+        onClick={() => handleEditDishClick(dish)}
+        className="absolute top-2 right-2 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-transform duration-300 transform hover:scale-110"
+      >
+        <MdEdit />
+      </button>
 
-              {/* Dish Info */}
-              <h3 className="font-bold text-lg text-gray-800">Dish Name</h3>
-              <p className="text-gray-600 text-sm mt-1">
-                Short description of the dish.
-              </p>
-              <div className="text-sm text-gray-500 mt-4">
-                <p>Calories: 200 kCal</p>
-                <p>Protein: 10 g</p>
-                <p>Carbs: 15 g</p>
-                <p>Fat: 8 g</p>
-              </div>
-              <div className="text-xs text-gray-400 mt-4">
-                <p>Created: 2024-12-01</p>
-                <p>Updated: 2024-12-06</p>
-              </div>
-            </div>
-          ))}
+      {/* Dish Info */}
+      <h3 className="font-semibold text-xl text-gray-800">{dish.name || "Dish Name"}</h3>
+      <p className="text-gray-600 text-sm mt-1">{dish.description || "Short description of the dish."}</p>
+
+      {/* Nutritional Info in Styled Boxes */}
+      <div className="grid grid-cols-2 gap-3 mt-6">
+        <div className="bg-blue-100 text-blue-800 p-3 rounded-lg shadow-sm text-center">
+          <p className="font-semibold">Calories</p>
+          <p>{dish.calories || "200 kCal"}</p>
         </div>
+        <div className="bg-green-100 text-green-800 p-3 rounded-lg shadow-sm text-center">
+          <p className="font-semibold">Protein</p>
+          <p>{dish.protein || "10 g"}</p>
+        </div>
+        <div className="bg-yellow-100 text-yellow-800 p-3 rounded-lg shadow-sm text-center">
+          <p className="font-semibold">Carbs</p>
+          <p>{dish.carbs || "15 g"}</p>
+        </div>
+        <div className="bg-red-100 text-red-800 p-3 rounded-lg shadow-sm text-center">
+          <p className="font-semibold">Fat</p>
+          <p>{dish.fat || "8 g"}</p>
+        </div>
+      </div>
+
+      {/* Created & Updated Info */}
+      <div className="text-xs text-gray-400 mt-4">
+        <p>Created: {dish.createdAt || "2024-12-01"}</p>
+        <p>Updated: {dish.updatedAt || "2024-12-06"}</p>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       {/* Show the Add or Edit Dish Popup */}
