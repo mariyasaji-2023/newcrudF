@@ -1,27 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { CiEdit } from "react-icons/ci";
 import { MdOutlineAddBusiness } from "react-icons/md";
 import { MdDelete } from "react-icons/md";
-import axios from 'axios';
-import SearchRestaurant from '../components/SearchRestaurant';
-import AddorEditRestaurantPopup from '../components/AddorEditRestaurantPopup';
-import DeleteRestaurantPopup from '../components/DeleteRestaurantPopup';
+import axios from "axios";
+import SearchRestaurant from "../components/SearchRestaurant";
+import AddorEditRestaurantPopup from "../components/AddorEditRestaurantPopup";
+import DeleteRestaurantPopup from "../components/DeleteRestaurantPopup";
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-  const [mode, setMode] = useState('add'); // 'add', 'edit', or 'delete'
+  const [mode, setMode] = useState("add"); // 'add', 'edit', or 'delete'
 
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/restaurants/allRestaurants');
+        const response = await axios.get(
+          "http://localhost:3001/api/restaurants/allRestaurants"
+        );
         let restaurantsArray = Array.isArray(response.data.restaurants)
           ? response.data.restaurants
           : response.data || [];
@@ -29,7 +31,9 @@ const Restaurants = () => {
         // Filter restaurants based on the debounced query
         if (debouncedQuery) {
           restaurantsArray = restaurantsArray.filter((restaurant) =>
-            restaurant.restaurantName.toLowerCase().includes(debouncedQuery.toLowerCase())
+            restaurant.restaurantName
+              .toLowerCase()
+              .includes(debouncedQuery.toLowerCase())
           );
         }
 
@@ -43,7 +47,7 @@ const Restaurants = () => {
         setRestaurants(sortedRestaurants);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching restaurants:', err);
+        console.error("Error fetching restaurants:", err);
         setError(err.message);
         setLoading(false);
         setRestaurants([]);
@@ -55,19 +59,19 @@ const Restaurants = () => {
 
   const handleEditClick = (restaurant) => {
     setSelectedRestaurant(restaurant);
-    setMode('edit');
+    setMode("edit");
     setShowPopup(true);
   };
 
   const handleAddClick = () => {
-    setMode('add');
+    setMode("add");
     setSelectedRestaurant(null);
     setShowPopup(true);
   };
 
   const handleDeleteClick = (restaurant) => {
     setSelectedRestaurant(restaurant);
-    setMode('delete');
+    setMode("delete");
     setShowPopup(true);
   };
 
@@ -77,17 +81,21 @@ const Restaurants = () => {
   };
 
   const updateRestaurantList = (updatedRestaurant) => {
-    if (mode === 'edit') {
+    if (mode === "edit") {
       setRestaurants((prevRestaurants) =>
-        prevRestaurants.map((restaurant) =>
-          restaurant._id === updatedRestaurant._id ? updatedRestaurant : restaurant
-        ).sort((a, b) => {
-          const dateA = new Date(a.updatedAt || a.createdAt);
-          const dateB = new Date(b.updatedAt || b.createdAt);
-          return dateB - dateA;
-        })
+        prevRestaurants
+          .map((restaurant) =>
+            restaurant._id === updatedRestaurant._id
+              ? updatedRestaurant
+              : restaurant
+          )
+          .sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.createdAt);
+            const dateB = new Date(b.updatedAt || b.createdAt);
+            return dateB - dateA;
+          })
       );
-    } else if (mode === 'add') {
+    } else if (mode === "add") {
       setRestaurants((prevRestaurants) => {
         const updatedRestaurants = [updatedRestaurant, ...prevRestaurants];
         return updatedRestaurants.sort((a, b) => {
@@ -96,9 +104,11 @@ const Restaurants = () => {
           return dateB - dateA;
         });
       });
-    } else if (mode === 'delete') {
+    } else if (mode === "delete") {
       setRestaurants((prevRestaurants) =>
-        prevRestaurants.filter((restaurant) => restaurant._id !== selectedRestaurant._id)
+        prevRestaurants.filter(
+          (restaurant) => restaurant._id !== selectedRestaurant._id
+        )
       );
     }
   };
@@ -133,46 +143,53 @@ const Restaurants = () => {
       <div className="grid grid-cols-1 container sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 mx-auto">
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">{error}</p>}
-        {restaurants.length > 0 ? (
-          restaurants.map((restaurant) => (
-            <div key={restaurant._id} className="bg-slate-100 rounded-xl mb-4 shadow-xl hover:shadow-2xl transform transition-all duration-500 hover:scale-105 overflow-hidden">
-              <div className="relative">
-                <Link to={`/restaurant/${restaurant._id}`}>
-                  <img
-                    className="rounded-t-xl w-full h-40 object-cover"
-                    src={`http://localhost:3001/public${restaurant.logo}`}
-                    alt={restaurant.name}
-                  />
-                </Link>
-                <button
-                  className="absolute top-2 right-2 p-2 bg-green-700 text-white rounded-full hover:bg-green-800 transition duration-300 transform hover:scale-110"
-                  onClick={() => handleEditClick(restaurant)}
-                >
-                  <CiEdit />
-                </button>
-                <button
-                  className="absolute top-2 left-2 p-2 bg-red-700 text-white rounded-full hover:bg-red-800 transition duration-300 transform hover:scale-110"
-                  onClick={() => handleDeleteClick(restaurant)}
-                >
-                  <MdDelete />
-                </button>
+        {restaurants.length > 0
+          ? restaurants.map((restaurant) => (
+              <div
+                key={restaurant._id}
+                className="bg-slate-100 rounded-xl mb-4 shadow-xl hover:shadow-2xl transform transition-all duration-500 hover:scale-105 overflow-hidden"
+              >
+                <div className="relative">
+                  <Link to={`/restaurant/${restaurant._id}`}>
+                    <img
+                      className="rounded-t-xl w-full h-40 object-cover"
+                      src={`http://localhost:3001/public${restaurant.logo}`}
+                      alt={restaurant.name}
+                    />
+                  </Link>
+                  <button
+                    className="absolute top-2 right-2 p-2 bg-green-700 text-white rounded-full hover:bg-green-800 transition duration-300 transform hover:scale-110"
+                    onClick={() => handleEditClick(restaurant)}
+                  >
+                    <CiEdit />
+                  </button>
+                  <button
+                    className="absolute top-2 left-2 p-2 bg-red-700 text-white rounded-full hover:bg-red-800 transition duration-300 transform hover:scale-110"
+                    onClick={() => handleDeleteClick(restaurant)}
+                  >
+                    <MdDelete />
+                  </button>
+                </div>
+                <div className="p-4 space-y-2">
+                  <h1 className="mt-2 font-bold text-xl text-center hover:text-green-600 transition duration-300">
+                    <Link to={`/restaurant/${restaurant._id}`}>
+                      {restaurant.restaurantName}
+                    </Link>
+                  </h1>
+                  <p className="mt-1 text-xs text-center text-gray-500">
+                    Created At : {formatDate(restaurant.createdAt)}
+                  </p>
+                  <p className="mt-1 text-xs text-center text-gray-500">
+                    Updated At : {formatDate(restaurant.updatedAt)}
+                  </p>
+                </div>
               </div>
-              <div className="p-4 space-y-2">
-                <h1 className="mt-2 font-bold text-xl text-center hover:text-green-600 transition duration-300">
-                  <Link to={`/restaurant/${restaurant._id}`}>{restaurant.restaurantName}</Link>
-                </h1>
-                <p className="mt-1 text-xs text-center text-gray-500">Created At : {formatDate(restaurant.createdAt)}</p>
-                <p className="mt-1 text-xs text-center text-gray-500">Updated At : {formatDate(restaurant.updatedAt)}</p>
-              </div>
-            </div>
-          ))
-        ) : (
-          !loading && <p>No restaurants available</p>
-        )}
+            ))
+          : !loading && <p>No restaurants available</p>}
       </div>
 
-      {showPopup && (
-        mode === 'delete' ? (
+      {showPopup &&
+        (mode === "delete" ? (
           <DeleteRestaurantPopup
             restaurant={selectedRestaurant}
             closePopup={closePopup}
@@ -185,8 +202,7 @@ const Restaurants = () => {
             closePopup={closePopup}
             updateRestaurantList={updateRestaurantList}
           />
-        )
-      )}
+        ))}
     </div>
   );
 };
