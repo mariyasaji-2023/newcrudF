@@ -29,7 +29,7 @@ const DishCard = ({ dish }) => {
       </div>
 
       <div className="category-info">
-        {category && <p className="text-sm text-gray-500"><strong>Category:</strong> {category}</p>}
+        {category && <p className="text-sm text-gray-500"><strong>Category:</strong> {category.categoryName}</p>}
         {subCategory && <p className="text-sm text-gray-500"><strong>Subcategory:</strong> {subCategory}</p>}
       </div>
     </div>
