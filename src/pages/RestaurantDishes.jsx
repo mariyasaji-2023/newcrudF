@@ -1,30 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom'; // Add this to get the URL params
-import axios from 'axios';
-import DishCard from '../components/DishCard';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import DishCard from "../components/DishCard";
+import AddDishPopup from "../components/AddorEditDishPopup";
+import { MdAddCircleOutline } from "react-icons/md";
+import SearchRestaurant from "../components/SearchRestaurant";
 
 const RestaurantDishes = () => {
-  const { restaurantId } = useParams(); // Get restaurantId from the URL params
-  console.log('restaurantId:', restaurantId);
-
-  const [dishes, setDishes] = useState([]); // Initialize dishes as an empty array
+  const { restaurantId } = useParams();
+  const [dishes, setDishes] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [restaurantName, setRestaurantName] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
-  // Fetch dishes for a particular restaurant
+  // Fetch dishes and categories for a particular restaurant
   useEffect(() => {
-    const fetchDishes = async () => {
-      if (!restaurantId) {
-        setError('Invalid restaurant ID');
-        setLoading(false);
-        return;
-      }
+    // Reset state on restaurant change
+    setRestaurantName("");
+    setDishes([]);
+    setCategories([]);
+    setLoading(true);
+    setError("");
 
+    const fetchDishes = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/restaurants/allDishes/${restaurantId}`);
+        const response = await axios.get(
+          `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+        );
         setDishes(response.data.dishes || []);
+        setCategories(response.data.categories || []);
+        setRestaurantName(
+          response.data.restaurant?.name || `Restaurant ${restaurantId}`
+        );
       } catch (err) {
-        setError('Error fetching dishes');
+        setError("Failed to load restaurant details. Please try again.");
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -32,6 +45,18 @@ const RestaurantDishes = () => {
 
     fetchDishes();
   }, [restaurantId]);
+
+  const handleAddDish = (newDish) => {
+    setDishes((prevDishes) => [...prevDishes, newDish]);
+  };
+
+  const togglePopup = () => {
+    setIsPopupVisible((prevState) => !prevState);
+  };
+
+  const handleAddDishClick = () => {
+    setIsPopupVisible(true);
+  };
 
   if (loading) {
     return <p className="text-center text-xl">Loading dishes...</p>;
@@ -41,18 +66,102 @@ const RestaurantDishes = () => {
     return <p className="text-center text-red-500">{error}</p>;
   }
 
+  // Organize dishes by category and subcategory
+  const organizedDishes = categories.map((category) => ({
+    categoryName: category.categoryName,
+    subCategories: category.subCategories.map((subCategory) => ({
+      subCategoryName: subCategory.subCategoryName,
+      dishes: dishes.filter(
+        (dish) => dish.subCategoryId === subCategory.subCategoryId
+      ),
+    })),
+    dishes: dishes.filter(
+      (dish) => dish.categoryId === category.categoryId && !dish.subCategoryId
+    ),
+  }));
+
   return (
     <div className="container mx-auto p-6">
-      <h2 className="text-2xl font-bold text-center mb-6">Dishes for This Restaurant</h2>
+      <div className="sticky top-0 z-10 bg-white shadow-md p-4 flex items-center justify-between">
+        {/* Search */}
+        <div className="w-full md:w-1/3">
+          <SearchRestaurant onSearch={setDebouncedQuery} />
+        </div>
 
-      {dishes.length === 0 ? (
-        <p className="text-center">No dishes found for this restaurant.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dishes.map((dish) => (
-            <DishCard key={dish._id} dish={dish} />
+        {/* Center Heading */}
+        <h2 className="text-2xl font-bold text-center mx-4">
+          Dishes for {restaurantName}
+        </h2>
+
+        {/* Add Dish Button */}
+        <div className="w-full md:w-1/3 flex justify-end">
+          <button
+            onClick={handleAddDishClick}
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full px-6 py-3 shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center group"
+          >
+            <MdAddCircleOutline className="text-2xl transition-transform duration-300" />
+            <span className="ml-2">Add Dish</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Dishes Section */}
+      {organizedDishes.map((category) => (
+        <div key={category.categoryName} className="mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            {category.categoryName}
+          </h2>
+
+          {category.dishes.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+              {category.dishes.map((dish) => (
+                <DishCard
+                  key={dish._id}
+                  dish={dish}
+                  categoryName={category.categoryName}
+                  subCategoryName={null}
+                />
+              ))}
+            </div>
+          )}
+
+          {category.subCategories.map((subCategory) => (
+            <div key={subCategory.subCategoryName} className="mt-6">
+              <h3 className="text-xl font-medium text-gray-700">
+                {subCategory.subCategoryName}
+              </h3>
+
+              {subCategory.dishes.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                  {subCategory.dishes.map((dish) => (
+                    <DishCard
+                      key={dish._id}
+                      dish={dish}
+                      categoryName={category.categoryName}
+                      subCategoryName={subCategory.subCategoryName}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
+      ))}
+
+      <button
+        className="mt-6 px-4 py-2 bg-blue-500 text-white rounded-md"
+        onClick={togglePopup}
+      >
+        Add Dish
+      </button>
+
+      {isPopupVisible && (
+        <AddDishPopup
+          mode="add"
+          closePopup={togglePopup}
+          updateDishList={handleAddDish}
+          restaurantId={restaurantId}
+        />
       )}
     </div>
   );
