@@ -18,18 +18,17 @@ const RestaurantDishes = () => {
 
   // Fetch dishes and categories for a particular restaurant
   useEffect(() => {
-    // Reset state on restaurant change
-    setRestaurantName("");
-    setDishes([]);
-    setCategories([]);
-    setLoading(true);
-    setError("");
-
     const fetchDishes = async () => {
       try {
         const response = await axios.get(
           `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
         );
+        
+        // Debugging logs
+        console.log('Full response:', response.data);
+        console.log('Restaurant object:', response.data.restaurant);
+        console.log('Restaurant name:', response.data.restaurant?.name);
+
         setDishes(response.data.dishes || []);
         setCategories(response.data.categories || []);
         setRestaurantName(
@@ -42,12 +41,12 @@ const RestaurantDishes = () => {
         setLoading(false);
       }
     };
-
+  
     fetchDishes();
   }, [restaurantId]);
 
   const handleAddDish = (newDish) => {
-    setDishes((prevDishes) => [...prevDishes, newDish]);
+    setDishes((prevDishes) => [...prevDishes, newDish]); // Add the new dish directly to the state
   };
 
   const togglePopup = () => {
@@ -66,16 +65,22 @@ const RestaurantDishes = () => {
     return <p className="text-center text-red-500">{error}</p>;
   }
 
-  // Organize dishes by category and subcategory
+  // Organize dishes by category and subcategory, and filter based on debounced query
+  const filteredDishes = debouncedQuery
+    ? dishes.filter((dish) =>
+        dish.name.toLowerCase().includes(debouncedQuery.toLowerCase())
+      )
+    : dishes;
+
   const organizedDishes = categories.map((category) => ({
     categoryName: category.categoryName,
     subCategories: category.subCategories.map((subCategory) => ({
       subCategoryName: subCategory.subCategoryName,
-      dishes: dishes.filter(
+      dishes: filteredDishes.filter(
         (dish) => dish.subCategoryId === subCategory.subCategoryId
       ),
     })),
-    dishes: dishes.filter(
+    dishes: filteredDishes.filter(
       (dish) => dish.categoryId === category.categoryId && !dish.subCategoryId
     ),
   }));
@@ -108,52 +113,45 @@ const RestaurantDishes = () => {
       {/* Dishes Section */}
       {organizedDishes.map((category) => (
         <div key={category.categoryName} className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            {category.categoryName}
-          </h2>
-
+          {/* Render category dishes */}
           {category.dishes.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-              {category.dishes.map((dish) => (
-                <DishCard
-                  key={dish._id}
-                  dish={dish}
-                  categoryName={category.categoryName}
-                  subCategoryName={null}
-                />
-              ))}
+            <div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                {category.dishes.map((dish) => (
+                  <DishCard
+                    key={dish._id}
+                    dish={dish}
+                    categoryName={category.categoryName}
+                    subCategoryName={null}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
+          {/* Render subcategories */}
           {category.subCategories.map((subCategory) => (
             <div key={subCategory.subCategoryName} className="mt-6">
-              <h3 className="text-xl font-medium text-gray-700">
-                {subCategory.subCategoryName}
-              </h3>
-
               {subCategory.dishes.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                  {subCategory.dishes.map((dish) => (
-                    <DishCard
-                      key={dish._id}
-                      dish={dish}
-                      categoryName={category.categoryName}
-                      subCategoryName={subCategory.subCategoryName}
-                    />
-                  ))}
+                <div>
+                 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                    {subCategory.dishes.map((dish) => (
+                      <DishCard
+                        key={dish._id}
+                        dish={dish}
+                        categoryName={category.categoryName}
+                        subCategoryName={subCategory.subCategoryName}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
       ))}
-
-      <button
-        className="mt-6 px-4 py-2 bg-blue-500 text-white rounded-md"
-        onClick={togglePopup}
-      >
-        Add Dish
-      </button>
 
       {isPopupVisible && (
         <AddDishPopup

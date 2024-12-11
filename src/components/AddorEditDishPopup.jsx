@@ -3,7 +3,7 @@ import { MdClose } from "react-icons/md";
 import axios from "axios";
 
 const AddDishPopup = ({
-  mode,
+  mode = "add",
   closePopup,
   updateDishList,
   restaurantId,
@@ -16,140 +16,158 @@ const AddDishPopup = ({
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState("");
   const [newSubCategory, setNewSubCategory] = useState("");
 
-  const [dishName, setDishName] = useState("");
-  const [description, setDescription] = useState("");
-  const [calories, setCalories] = useState("");
-  const [protein, setProtein] = useState("");
-  const [carbs, setCarbs] = useState("");
-  const [fat, setFat] = useState("");
-  const [servingSize, setServingSize] = useState("");
-  const [servingUnit, setServingUnit] = useState("");
+  const [dishName, setDishName] = useState(dish?.name || "");
+  const [description, setDescription] = useState(dish?.description || "");
+  const [calories, setCalories] = useState(dish?.calories || "");
+  const [protein, setProtein] = useState(dish?.protein || "");
+  const [carbs, setCarbs] = useState(dish?.carbs || "");
+  const [fat, setFat] = useState(dish?.fat || "");
+  const [servingSize, setServingSize] = useState(dish?.servingSize || "");
+  const [servingUnit, setServingUnit] = useState(dish?.servingUnit || "g");
 
-  const [caloriesUnit, setCaloriesUnit] = useState("kcal");
-  const [proteinUnit, setProteinUnit] = useState("g");
-  const [carbsUnit, setCarbsUnit] = useState("g");
-  const [fatUnit, setFatUnit] = useState("g");
+  const [caloriesUnit] = useState("kcal");
+  const [proteinUnit] = useState("g");
+  const [carbsUnit] = useState("g");
+  const [fatUnit] = useState("g");
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3001/api/allDishes/${restaurantId}`
+          `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
         );
-        setCategories(response.data.categories || []);
+        const fetchedCategories = response.data.categories || [];
+        setCategories(fetchedCategories);
+
+        if (mode === "edit" && dish?.categoryId) {
+          const selectedCategory = fetchedCategories.find(
+            (cat) => cat.categoryId === dish.categoryId
+          );
+          if (selectedCategory) {
+            setSubCategories(selectedCategory.subCategories || []);
+            setSelectedCategoryId(dish.categoryId);
+            setSelectedSubCategoryId(dish.subCategoryId || "");
+          }
+        }
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
     };
 
     fetchCategories();
-  }, [restaurantId]);
+  }, [restaurantId, mode, dish]);
 
   useEffect(() => {
-    if (mode === "edit" && dish) {
-      setDishName(dish.dishName);
-      setDescription(dish.description || "");
-      setCalories(dish.nutritionFacts?.calories?.value || "");
-      setProtein(dish.nutritionFacts?.protein?.value || "");
-      setCarbs(dish.nutritionFacts?.carbs?.value || "");
-      setFat(dish.nutritionFacts?.totalFat?.value || "");
-      setServingSize(dish.servingInfo?.size || "");
-      setServingUnit(dish.servingInfo?.unit || "");
-      setSelectedCategoryId(dish.categoryId || "");
-      setSelectedSubCategoryId(dish.subCategoryId || "");
+    if (selectedCategoryId) {
+      const selectedCategory = categories.find(
+        (cat) => cat.categoryId === selectedCategoryId
+      );
+      setSubCategories(selectedCategory?.subCategories || []);
+      setSelectedSubCategoryId("");
     }
-  }, [mode, dish]);
+  }, [selectedCategoryId, categories]);
 
   const handleAddCategory = async () => {
-    if (newCategory.trim()) {
-      try {
-        const response = await axios.put(
-          `http://localhost:3001/api/createCategory/${restaurantId}`,
-          { categoryName: newCategory }
-        );
-        const addedCategory = response.data;
-        setCategories([...categories, addedCategory]);
-        setSelectedCategoryId(addedCategory._id);
-        setNewCategory("");
-      } catch (error) {
-        console.error("Error adding new category:", error);
+    if (!newCategory.trim()) return;
+
+    try {
+      const response = await axios.put(
+        `http://localhost:3001/api/restaurants/createCategory/${restaurantId}`,
+        { categoryName: newCategory }
+      );
+
+      const updatedCategories = response.data.categories;
+      setCategories(updatedCategories);
+      setNewCategory(""); // Clear the input field after successful addition
+
+      // Select the newly added category
+      const newlyAddedCategory = updatedCategories.find(
+        (cat) => cat.categoryName === newCategory
+      );
+      if (newlyAddedCategory) {
+        setSelectedCategoryId(newlyAddedCategory.categoryId); // Select the new category
+        setSubCategories(newlyAddedCategory.subCategories || []); // Set subcategories if available
+        setSelectedSubCategoryId(""); // Reset subcategory selection
       }
+
+    } catch (error) {
+      console.error("Error adding category:", error.response?.data || error.message);
     }
   };
 
   const handleAddSubCategory = async () => {
-    if (newSubCategory.trim() && selectedCategoryId) {
-      try {
-        const response = await axios.put(
-          `http://localhost:3001/api/createSubcategory/${restaurantId}/${selectedCategoryId}`,
-          { subCategoryName: newSubCategory }
-        );
-        const addedSubCategory = response.data;
-        const updatedCategories = categories.map((category) => {
-          if (category._id === selectedCategoryId) {
-            category.subCategories.push(addedSubCategory);
-          }
-          return category;
-        });
-        setCategories(updatedCategories);
-        setSubCategories([...subCategories, addedSubCategory]);
-        setSelectedSubCategoryId(addedSubCategory._id);
-        setNewSubCategory("");
-      } catch (error) {
-        console.error("Error adding new subcategory:", error);
-      }
+    if (!newSubCategory.trim() || !selectedCategoryId) return;
+
+    // Ensure the category ID is valid before sending the request
+    const selectedCategory = categories.find(
+      (cat) => cat.categoryId === selectedCategoryId
+    );
+    if (!selectedCategory) {
+      console.error("Category not found");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `http://localhost:3001/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
+        { subCategoryName: newSubCategory }
+      );
+
+      // Update the subcategories list after adding a new subcategory
+      setSubCategories((prev) => [...prev, response.data.subCategory]);
+      setNewSubCategory(""); // Clear the input field after successful addition
+
+      // Optionally, refresh the categories list
+      const updatedCategoriesResponse = await axios.get(
+        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+      );
+      setCategories(updatedCategoriesResponse.data.categories || []);
+
+    } catch (error) {
+      console.error("Error adding subcategory:", error.response?.data || error.message);
     }
   };
+
+
+
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate all fields
-    if (!dishName || !selectedCategoryId || !servingSize || !servingUnit) {
-      alert(
-        "Dish Name, Category, Serving Size, and Serving Unit are required."
-      );
-      return;
-    }
-
-    if (
-      calories < 0 ||
-      protein < 0 ||
-      carbs < 0 ||
-      fat < 0 ||
-      servingSize < 0
-    ) {
-      alert(
-        "Calories, Protein, Carbs, Fat, and Serving Size must be 0 or a positive number."
-      );
-      return;
-    }
-
-    // Handle default units if custom units are not provided
+    // Prepare the dish data as per the controller requirements
     const dishData = {
-      dishName,
-      description,
-      servingInfo: { size: parseFloat(servingSize), unit: servingUnit },
-      nutritionFacts: {
-        calories: { value: parseFloat(calories), unit: caloriesUnit || "kcal" },
-        protein: { value: parseFloat(protein), unit: proteinUnit || "g" },
-        carbs: { value: parseFloat(carbs), unit: carbsUnit || "g" },
-        totalFat: { value: parseFloat(fat), unit: fatUnit || "g" },
+      dishName: dishName,
+      description: description,
+      servingInfo: {
+        size: servingSize,
+        unit: servingUnit
       },
+      nutritionFacts: {
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        totalFat: fat
+      }
     };
 
     try {
-      const url = selectedSubCategoryId
-        ? `http://localhost:3001/api/createDish/${selectedCategoryId}/${selectedSubCategoryId}`
-        : `http://localhost:3001/api/createDish/${selectedCategoryId}`;
+      // Use PUT request to create a dish
+      const response = await axios.put(
+        `http://localhost:3001/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ''}`, // Use the categoryId and subCategoryId
+        dishData
+      );
 
-      const response = await axios.put(url, dishData);
-      updateDishList(response.data.dish);
-      closePopup();
+      // Call the updateDishList function from RestaurantDishes
+      updateDishList(response.data.dish); // Add the new dish to the dish list
+
+      closePopup(); // Close the popup after successful submission
     } catch (error) {
-      console.error("Error saving dish:", error);
+      console.error("Error adding dish:", error.response?.data || error.message);
     }
   };
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -165,24 +183,14 @@ const AddDishPopup = ({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 gap-2">
-              <label className="text-sm font-medium">Dish Name *</label>
+            <div>
+              <label className="block text-sm font-medium">Dish Name *</label>
               <input
                 type="text"
                 value={dishName}
                 onChange={(e) => setDishName(e.target.value)}
                 className="w-full p-2 border rounded-md"
                 required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-2">
-              <label className="text-sm font-medium">Description</label>
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 border rounded-md"
               />
             </div>
 
@@ -197,16 +205,17 @@ const AddDishPopup = ({
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
+                    <option key={cat.categoryId} value={cat.categoryId}>
                       {cat.categoryName}
                     </option>
                   ))}
+
                 </select>
                 <input
                   type="text"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  placeholder="Add New Category"
+                  placeholder="New Category"
                   className="p-2 border rounded-md"
                 />
                 <button
@@ -220,152 +229,120 @@ const AddDishPopup = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Subcategory</label>
+              <label className="block text-sm font-medium">Subcategory (Only If there any)</label>
               <div className="flex items-center gap-2">
+
+
                 <select
                   value={selectedSubCategoryId}
                   onChange={(e) => setSelectedSubCategoryId(e.target.value)}
                   className="flex-grow p-2 border rounded-md"
+                  disabled={!selectedCategoryId}
                 >
-                  <option value="">Select Subcategory</option>
-                  {subCategories.map((subCat) => (
-                    <option key={subCat._id} value={subCat._id}>
-                      {subCat.subCategoryName}
+                  <option value="">
+                    {selectedCategoryId ? "Select Subcategory" : "Select a category first"}
+                  </option>
+                  {categories.map((cat) => (
+                    <option key={`${cat.categoryId}-${cat.categoryName}`} value={cat.categoryId}>
+                      {cat.categoryName}
                     </option>
+
                   ))}
+
                 </select>
+
                 <input
                   type="text"
                   value={newSubCategory}
                   onChange={(e) => setNewSubCategory(e.target.value)}
-                  placeholder="Add Subcategory"
+                  placeholder="New Subcategory"
                   className="p-2 border rounded-md"
+                  disabled={!selectedCategoryId}
                 />
                 <button
                   type="button"
                   onClick={handleAddSubCategory}
                   className="p-2 bg-green-500 text-white rounded-md"
+                  disabled={!selectedCategoryId}
                 >
                   Add
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-sm font-medium">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium">Calories *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={calories}
-                    onChange={(e) => setCalories(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    required
-                    min="0"
-                  />
-                  <input
-                    type="text"
-                    value={caloriesUnit}
-                    onChange={(e) => setCaloriesUnit(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    placeholder="kcal"
-                  />
-                </div>
+                <label className="block text-sm font-medium">Calories ({caloriesUnit})</label>
+                <input
+                  type="number"
+                  value={calories}
+                  onChange={(e) => setCalories(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium">
-                  Protein (g) *
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={protein}
-                    onChange={(e) => setProtein(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    required
-                    min="0"
-                  />
-                  <input
-                    type="text"
-                    value={proteinUnit}
-                    onChange={(e) => setProteinUnit(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    placeholder="g"
-                  />
-                </div>
+                <label className="block text-sm font-medium">Protein ({proteinUnit})</label>
+                <input
+                  type="number"
+                  value={protein}
+                  onChange={(e) => setProtein(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium">Carbs (g) *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={carbs}
-                    onChange={(e) => setCarbs(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    required
-                    min="0"
-                  />
-                  <input
-                    type="text"
-                    value={carbsUnit}
-                    onChange={(e) => setCarbsUnit(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    placeholder="g"
-                  />
-                </div>
+                <label className="block text-sm font-medium">Carbs ({carbsUnit})</label>
+                <input
+                  type="number"
+                  value={carbs}
+                  onChange={(e) => setCarbs(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium">Fat (g) *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={fat}
-                    onChange={(e) => setFat(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    required
-                    min="0"
-                  />
-                  <input
-                    type="text"
-                    value={fatUnit}
-                    onChange={(e) => setFatUnit(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    placeholder="g"
-                  />
-                </div>
+                <label className="block text-sm font-medium">Fat ({fatUnit})</label>
+                <input
+                  type="number"
+                  value={fat}
+                  onChange={(e) => setFat(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium">
-                  Serving Size *
-                </label>
+                <label className="block text-sm font-medium">Serving Size</label>
                 <input
                   type="number"
                   value={servingSize}
                   onChange={(e) => setServingSize(e.target.value)}
                   className="w-full p-2 border rounded-md"
-                  required
-                  min="0"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Unit *</label>
+                <label className="block text-sm font-medium">Serving Unit</label>
                 <input
                   type="text"
                   value={servingUnit}
                   onChange={(e) => setServingUnit(e.target.value)}
                   className="w-full p-2 border rounded-md"
-                  required
                 />
               </div>
             </div>
 
-            <div className="flex justify-end mt-4">
+            <div>
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-500 text-white rounded-md"
+                className="w-full bg-blue-500 text-white py-2 rounded-md"
               >
                 {mode === "add" ? "Add Dish" : "Save Changes"}
               </button>
