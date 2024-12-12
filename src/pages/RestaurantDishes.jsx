@@ -4,7 +4,7 @@ import axios from "axios";
 import DishCard from "../components/DishCard";
 import AddDishPopup from "../components/AddorEditDishPopup";
 import { MdAddCircleOutline } from "react-icons/md";
-import SearchRestaurant from "../components/SearchRestaurant";
+import SearchDish from "../components/SearchDish";
 
 const RestaurantDishes = () => {
   const { restaurantId } = useParams();
@@ -23,11 +23,11 @@ const RestaurantDishes = () => {
         const response = await axios.get(
           `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
         );
-        
+
         // Debugging logs
-        console.log('Full response:', response.data);
-        console.log('Restaurant object:', response.data.restaurant);
-        console.log('Restaurant name:', response.data.restaurant?.name);
+        console.log("Full response:", response.data);
+        console.log("Restaurant object:", response.data.restaurant);
+        console.log("Restaurant name:", response.data.restaurant?.name);
 
         setDishes(response.data.dishes || []);
         setCategories(response.data.categories || []);
@@ -41,7 +41,7 @@ const RestaurantDishes = () => {
         setLoading(false);
       }
     };
-  
+
     fetchDishes();
   }, [restaurantId]);
 
@@ -68,7 +68,7 @@ const RestaurantDishes = () => {
   // Organize dishes by category and subcategory, and filter based on debounced query
   const filteredDishes = debouncedQuery
     ? dishes.filter((dish) =>
-        dish.name.toLowerCase().includes(debouncedQuery.toLowerCase())
+        dish.name?.toLowerCase().includes(debouncedQuery.toLowerCase())
       )
     : dishes;
 
@@ -90,7 +90,7 @@ const RestaurantDishes = () => {
       <div className="sticky top-0 z-10 bg-white shadow-md p-4 flex items-center justify-between">
         {/* Search */}
         <div className="w-full md:w-1/3">
-          <SearchRestaurant onSearch={setDebouncedQuery} />
+          <SearchDish onSearch={setDebouncedQuery} />
         </div>
 
         {/* Center Heading */}
@@ -116,7 +116,6 @@ const RestaurantDishes = () => {
           {/* Render category dishes */}
           {category.dishes.length > 0 && (
             <div>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                 {category.dishes.map((dish) => (
                   <DishCard
@@ -135,7 +134,6 @@ const RestaurantDishes = () => {
             <div key={subCategory.subCategoryName} className="mt-6">
               {subCategory.dishes.length > 0 && (
                 <div>
-                 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
                     {subCategory.dishes.map((dish) => (
                       <DishCard
