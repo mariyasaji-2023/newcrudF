@@ -42,7 +42,7 @@ const AddDishPopup = ({
           console.log("Selected Category ID:", selectedCategoryId);
 
         }
-        
+
       } catch (error) {
         console.error("Error fetching categories:", error);
         setBackendMessage("Error fetching categories.");
@@ -64,23 +64,23 @@ const AddDishPopup = ({
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
-  
+
     try {
       const response = await axios.put(
         `http://localhost:3001/api/restaurants/createCategory/${restaurantId}`,
         { categoryName: newCategory }
       );
-  
+
       // Fetch the updated list of categories after adding a new one
       const updatedCategoriesResponse = await axios.get(
         `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
       setCategories(updatedCategories);
-  
+
       // Clear the input field after successful addition
-      setNewCategory(""); 
-  
+      setNewCategory("");
+
       // Select the newly added category
       const newlyAddedCategory = updatedCategories.find(
         (cat) => cat.categoryName === newCategory
@@ -95,24 +95,24 @@ const AddDishPopup = ({
       setBackendMessage("Error adding category.");
     }
   };
-  
+
 
   const handleAddSubCategory = async () => {
     if (!newSubCategory.trim() || !selectedCategoryId) return;
-  
+
     try {
       // Make the API call to create the new subcategory
       const response = await axios.put(
         `http://localhost:3001/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
         { subCategoryName: newSubCategory }
       );
-  
+
       // Fetch the updated subcategories from the backend after adding the new subcategory
       const updatedCategoriesResponse = await axios.get(
         `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
-  
+
       // Find the category with the selected category ID and update the subcategories list
       const updatedCategory = updatedCategories.find(
         (cat) => cat.categoryId === selectedCategoryId
@@ -120,14 +120,14 @@ const AddDishPopup = ({
       if (updatedCategory) {
         setSubCategories(updatedCategory.subCategories || []);
       }
-  
+
       setNewSubCategory(""); // Clear the input field after successful addition
     } catch (error) {
       console.error("Error adding subcategory:", error.response?.data || error.message);
       setBackendMessage("Error adding subcategory.");
     }
   };
-  
+
 
   const handleAddServingInfo = () => {
     setServingInfos((prev) => [
@@ -220,7 +220,9 @@ const AddDishPopup = ({
       closePopup(); // Close the popup after successful submission
     } catch (error) {
       console.error("Error adding dish:", error.response?.data || error.message);
-      setBackendMessage("Error adding dish.");
+
+      // If backend provides a message, show it, otherwise use a default error message
+      setBackendMessage(error.response?.data?.message || "Error adding dish.");
     }
   };
 
@@ -382,7 +384,7 @@ const AddDishPopup = ({
                   <label className="block text-sm mb-1 font-medium"><strong>Nutrition Facts</strong></label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium"><strong>Calories</strong> (*)</label>
+                      <label className="block text-sm font-medium"><strong>Calories in kcal</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.calories}
@@ -393,20 +395,9 @@ const AddDishPopup = ({
                         className="w-full p-2 border rounded-md"
                       />
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
-                      <input
-                        type="text"
-                        value={servingInfo.nutritionFacts.caloriesUnit}
-                        onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.caloriesUnit", e.target.value)
-                        }
-                        className="w-full p-2 border rounded-md"
-                        placeholder="e.g. kcal"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium"><strong>Protein</strong> (*)</label>
+                      <label className="block text-sm font-medium"><strong>Protein in g</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.protein}
@@ -417,20 +408,9 @@ const AddDishPopup = ({
                         className="w-full p-2 border rounded-md"
                       />
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
-                      <input
-                        type="text"
-                        value={servingInfo.nutritionFacts.proteinUnit}
-                        onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.proteinUnit", e.target.value)
-                        }
-                        className="w-full p-2 border rounded-md"
-                        placeholder="e.g. g"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium"><strong>Carbs</strong> (*)</label>
+                      <label className="block text-sm font-medium"><strong>Carbohydrates (Carbs) in g</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.carbs}
@@ -441,20 +421,9 @@ const AddDishPopup = ({
                         className="w-full p-2 border rounded-md"
                       />
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
-                      <input
-                        type="text"
-                        value={servingInfo.nutritionFacts.carbsUnit}
-                        onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.carbsUnit", e.target.value)
-                        }
-                        className="w-full p-2 border rounded-md"
-                        placeholder="e.g. g"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium"><strong>Fat</strong> (*)</label>
+                      <label className="block text-sm font-medium"><strong>Total Fat in g</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.totalFat}
@@ -465,18 +434,7 @@ const AddDishPopup = ({
                         className="w-full p-2 border rounded-md"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
-                      <input
-                        type="text"
-                        value={servingInfo.nutritionFacts.fatUnit}
-                        onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.fatUnit", e.target.value)
-                        }
-                        className="w-full p-2 border rounded-md"
-                        placeholder="e.g. g"
-                      />
-                    </div>
+
                   </div>
                 </div>
               </div>

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { MdEdit } from "react-icons/md";
+import { MdEdit, MdDelete } from "react-icons/md";
+import DeleteDishPopup from "./DeleteDishPopup"; // Ensure this component is correctly imported
 
-const DishCard = ({ dish, categoryName, subCategoryName }) => {
+const DishCard = ({ dish, categoryName, subCategoryName, restaurantId }) => {
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+
   const {
     dishName,
     description,
@@ -22,34 +25,61 @@ const DishCard = ({ dish, categoryName, subCategoryName }) => {
 
   // If no serving infos, return a placeholder or null
   if (!servingInfos || servingInfos.length === 0) {
-    return <div>No serving information available</div>;
+    return (
+      <div className="bg-white px-6 py-3 rounded-lg shadow-lg max-w-xs">
+        <p className="text-gray-500">No serving information available</p>
+      </div>
+    );
   }
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
 
     const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
 
     return `${month}/${day}/${year} ${hours}:${minutes}`;
   };
 
+  const handleDeleteClick = () => {
+    setShowDeletePopup(true);
+  };
+
+  const closePopup = () => {
+    setShowDeletePopup(false);
+  };
+
+  const updateDishList = (deletedDishId) => {
+    // Update the dish list by removing the deleted dish
+    console.log("Dish deleted:", deletedDishId);
+  };
+
   return (
     <div className="relative bg-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer max-w-xs">
-
+      {/* Dish Name and Action Buttons */}
       <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold text-xl text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap" title={dishName || "Dish Name"}>
+        <h3
+          className="font-semibold text-xl text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap"
+          title={dishName || "Dish Name"}
+        >
           <strong>{dishName || "Dish Name"}</strong>
         </h3>
-        <button className="absolute top-2 right-2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-transform duration-300 transform hover:scale-110">
+        <button
+          className="absolute top-2 right-2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-transform duration-300 transform hover:scale-110"
+        >
           <MdEdit />
         </button>
+        <button
+          className="absolute top-2 right-14 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-transform duration-300 transform hover:scale-110"
+          onClick={handleDeleteClick}
+        >
+          <MdDelete />
+        </button>
       </div>
-
 
       {/* Category and Subcategory */}
       <div className="text-sm flex justify-between text-gray-600">
@@ -75,18 +105,17 @@ const DishCard = ({ dish, categoryName, subCategoryName }) => {
           <button
             key={index}
             onClick={() => handleServingSizeChange(info)}
-            className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${selectedServingInfo?.size === info.servingInfo.size
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-              }`}
-            title={info.servingInfo.size}  // Tooltip showing full serving size
+            className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${
+              selectedServingInfo?.size === info.servingInfo.size
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-blue-200"
+            }`}
+            title={info.servingInfo.size} // Tooltip showing full serving size
           >
-            {info.servingInfo.size.slice(0, 5)}  {/* Show only first 5 characters */}
+            {info.servingInfo.size.slice(0, 5)} {/* Show only first 5 characters */}
           </button>
         ))}
       </div>
-
-
 
       {/* Nutritional Facts */}
       <div className="grid grid-cols-2 gap-2 mt-4">
@@ -119,20 +148,41 @@ const DishCard = ({ dish, categoryName, subCategoryName }) => {
           </p>
         </div>
       </div>
+
+      {/* Price */}
       <div className="text-sm bg-indigo-600 mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2 flex justify-center">
-        <p >
-          <strong>Price : $ {selectedServingInfo?.price || "N/A"} {" "}</strong>
+        <p>
+          <strong>Price : $ {selectedServingInfo?.price || "N/A"}</strong>
+        </p>
+      </div>
+
+      {/* Created and Updated At */}
+      <div className="text-xs flex text-gray-400 mt-1 space-x-2 justify-between">
+        <p>
+          <strong>Created At :</strong>
+        </p>
+        <p>
+          <strong>Updated At :</strong>
         </p>
       </div>
       <div className="text-xs flex text-gray-400 mt-1 space-x-2 justify-between">
-        <p> <strong>createdAt :</strong></p>
-        <p> <strong>: updatedAt</strong></p>
-      </div>
-      <div className="text-xs flex text-gray-400 mt-1 space-x-2 justify-between">
-        <p> <strong>{formatDate(createdAt)}</strong></p>
-        <p> <strong>{formatDate(updatedAt)}</strong></p>
+        <p>
+          <strong>{formatDate(createdAt)}</strong>
+        </p>
+        <p>
+          <strong>{formatDate(updatedAt)}</strong>
+        </p>
       </div>
 
+      {/* Delete Popup */}
+      {showDeletePopup && (
+        <DeleteDishPopup
+          restaurantId={restaurantId}
+          dish={dish}
+          closePopup={closePopup}
+          updateDishList={updateDishList}
+        />
+      )}
     </div>
   );
 };
