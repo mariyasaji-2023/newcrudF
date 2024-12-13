@@ -3,35 +3,34 @@ import React, { useState } from 'react';
 const DeleteDishPopup = ({ restaurantId, dish, closePopup, updateDishList }) => {
   const [deleteInput, setDeleteInput] = useState('');
   const [error, setError] = useState('');
+const [dishes, setDishes] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate delete input
+  
     if (!deleteInput) {
       setError('Delete ID is required.');
       return;
     }
-
-    // Clear previous errors
-    setError('');
-
+  
     try {
-      const response = await fetch(`http://localhost:3001/api/restaurants/deleteDish/${restaurantId}/${dish._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ deleteId: deleteInput })
-      });
-
+      console.log("Restaurant ID:", restaurantId);
+      console.log("Dish ID:", dish._id);
+      console.log("Delete ID:", deleteInput);
+  
+      const response = await fetch(
+        `http://localhost:3001/api/restaurants/deleteDish/${restaurantId}/${dish._id}`, 
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deleteId: deleteInput }),
+        }
+      );
+  
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete dish');
-      }
-
-      // Update dish list and close popup
+  
+      if (!response.ok) throw new Error(data.message || 'Failed to delete dish');
+  
       updateDishList(dish._id);
       closePopup();
     } catch (err) {
