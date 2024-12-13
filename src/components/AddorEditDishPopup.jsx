@@ -131,12 +131,13 @@ const AddDishPopup = ({
   };
 
   const handleChangeServingInfo = (index, field, value) => {
-    // Handle only numeric input for number fields
-    if (field === "size" || field === "price" || field.includes("nutritionFacts")) {
+    const updatedServingInfos = [...servingInfos];
+    const keys = field.split(".");
+    let temp = updatedServingInfos[index];
+  
+    if (field === "price") {
+      // Validate numeric input for price
       if (value === "" || /^[0-9]+(\.[0-9]+)?$/.test(value)) {
-        const updatedServingInfos = [...servingInfos];
-        const keys = field.split(".");
-        let temp = updatedServingInfos[index];
         keys.forEach((key, i) => {
           if (i === keys.length - 1) {
             temp[key] = value;
@@ -147,12 +148,18 @@ const AddDishPopup = ({
         setServingInfos(updatedServingInfos);
       }
     } else {
-      // Handle all other inputs normally
-      const updatedServingInfos = [...servingInfos];
-      updatedServingInfos[index][field] = value;
+      // Handle other fields (including size) normally
+      keys.forEach((key, i) => {
+        if (i === keys.length - 1) {
+          temp[key] = value;
+        } else {
+          temp = temp[key];
+        }
+      });
       setServingInfos(updatedServingInfos);
     }
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -322,17 +329,17 @@ const AddDishPopup = ({
                   </button>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1"><strong>Serving Size</strong> (*)</label>
-                  <input
-                    type="text"
-                    value={servingInfo.size}
-                    min="0"
-                    onChange={(e) =>
-                      handleChangeServingInfo(index, "size", e.target.value)
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
+  <label className="block text-sm font-medium mb-1">
+    <strong>Serving Size</strong> (*)
+  </label>
+  <input
+    type="text"
+    value={servingInfo.size}
+    onChange={(e) => handleChangeServingInfo(index, "size", e.target.value)}
+    className="w-full p-2 border rounded-md"
+  />
+</div>
+
 
                 <div>
                   <label className="block text-sm font-medium mb-1"><strong>Price</strong></label>
