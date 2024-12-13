@@ -368,7 +368,7 @@ const AddDishPopup = ({
 
 
                 <div>
-                  <label className="block text-sm font-medium mb-1"><strong>Price</strong></label>
+                  <label className="block text-sm font-medium mb-1"><strong>Price in $</strong></label>
                   <input
                     type="number"
                     value={servingInfo.price}
