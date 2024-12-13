@@ -131,12 +131,13 @@ const AddDishPopup = ({
   };
 
   const handleChangeServingInfo = (index, field, value) => {
-    // Handle only numeric input for number fields
-    if (field === "size" || field === "price" || field.includes("nutritionFacts")) {
+    const updatedServingInfos = [...servingInfos];
+    const keys = field.split(".");
+    let temp = updatedServingInfos[index];
+  
+    if (field === "price") {
+      // Validate numeric input for price
       if (value === "" || /^[0-9]+(\.[0-9]+)?$/.test(value)) {
-        const updatedServingInfos = [...servingInfos];
-        const keys = field.split(".");
-        let temp = updatedServingInfos[index];
         keys.forEach((key, i) => {
           if (i === keys.length - 1) {
             temp[key] = value;
@@ -147,12 +148,18 @@ const AddDishPopup = ({
         setServingInfos(updatedServingInfos);
       }
     } else {
-      // Handle all other inputs normally
-      const updatedServingInfos = [...servingInfos];
-      updatedServingInfos[index][field] = value;
+      // Handle other fields (including size) normally
+      keys.forEach((key, i) => {
+        if (i === keys.length - 1) {
+          temp[key] = value;
+        } else {
+          temp = temp[key];
+        }
+      });
       setServingInfos(updatedServingInfos);
     }
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -197,21 +204,23 @@ const AddDishPopup = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-semibold ml-40">
               {mode === "add" ? "Add Dish" : "Edit Dish"}
             </h2>
             <button onClick={closePopup} className="text-gray-500 text-2xl">
               <MdClose />
             </button>
           </div>
+          <div className="mb-2 flex justify-center">
+            <p>"Fields marked with an asterisk <strong>(*)</strong> are mandatory."</p>
+          </div>
 
-          
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Dish Name */}
             <div>
-              <label className="block text-sm font-medium">Dish Name *</label>
+              <label className="block text-sm font-medium mb-1"><strong>Dish Name</strong> (*)</label>
               <input
                 type="text"
                 value={dishName}
@@ -223,17 +232,22 @@ const AddDishPopup = ({
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium">Description</label>
+              <label className="block text-sm font-medium mb-1">
+                <strong>Description</strong>
+              </label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value.slice(0, 100))}
+                maxLength="100"
                 className="w-full p-2 border rounded-md"
               />
+              <small>{description.length}/150 characters</small>
             </div>
+
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium">Category *</label>
+              <label className="block text-sm font-medium mb-1"><strong>Category</strong> (*)</label>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedCategoryId}
@@ -241,7 +255,7 @@ const AddDishPopup = ({
                   className="flex-grow p-2 border rounded-md"
                   required
                 >
-                  <option value="">Select Category</option>
+                  <option value=""><strong>Select Category</strong></option>
                   {categories.map((cat) => (
                     <option key={cat.categoryId} value={cat.categoryId}>
                       {cat.categoryName}
@@ -267,7 +281,7 @@ const AddDishPopup = ({
 
             {/* Subcategory */}
             <div>
-              <label className="block text-sm font-medium">Subcategory</label>
+              <label className="block text-sm font-medium mb-1"><strong>Subcategory</strong> (only if one exists)</label>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedSubCategoryId}
@@ -275,7 +289,7 @@ const AddDishPopup = ({
                   className="flex-grow p-2 border rounded-md"
                   disabled={!selectedCategoryId}
                 >
-                  <option value="">Select Subcategory</option>
+                  <option value=""><strong>Select Subcategory</strong></option>
                   {subCategories.map((subCat) => (
                     <option key={subCat.subCategoryId} value={subCat.subCategoryId}>
                       {subCat.subCategoryName}
@@ -305,7 +319,7 @@ const AddDishPopup = ({
             {servingInfos.map((servingInfo, index) => (
               <div key={index} className="space-y-4 border p-4 rounded-md">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium">Serving {index + 1}</h4>
+                  <h4 className="font-medium"><strong> Serving {index + 1}</strong></h4>
                   <button
                     type="button"
                     onClick={() => handleRemoveServingInfo(index)}
@@ -315,20 +329,20 @@ const AddDishPopup = ({
                   </button>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Serving Size</label>
-                  <input
-                    type="text"
-                    value={servingInfo.size}
-                    min="0"
-                    onChange={(e) =>
-                      handleChangeServingInfo(index, "size", e.target.value)
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
+  <label className="block text-sm font-medium mb-1">
+    <strong>Serving Size</strong> (*)
+  </label>
+  <input
+    type="text"
+    value={servingInfo.size}
+    onChange={(e) => handleChangeServingInfo(index, "size", e.target.value)}
+    className="w-full p-2 border rounded-md"
+  />
+</div>
+
 
                 <div>
-                  <label className="block text-sm font-medium">Price</label>
+                  <label className="block text-sm font-medium mb-1"><strong>Price</strong></label>
                   <input
                     type="number"
                     value={servingInfo.price}
@@ -341,10 +355,10 @@ const AddDishPopup = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium">Nutrition Facts</label>
+                  <label className="block text-sm mb-1 font-medium"><strong>Nutrition Facts</strong></label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium">Calories</label>
+                      <label className="block text-sm font-medium"><strong>Calories</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.calories}
@@ -356,7 +370,7 @@ const AddDishPopup = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Unit</label>
+                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
                       <input
                         type="text"
                         value={servingInfo.nutritionFacts.caloriesUnit}
@@ -368,7 +382,7 @@ const AddDishPopup = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Protein</label>
+                      <label className="block text-sm font-medium"><strong>Protein</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.protein}
@@ -380,7 +394,7 @@ const AddDishPopup = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Unit</label>
+                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
                       <input
                         type="text"
                         value={servingInfo.nutritionFacts.proteinUnit}
@@ -392,7 +406,7 @@ const AddDishPopup = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Carbs</label>
+                      <label className="block text-sm font-medium"><strong>Carbs</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.carbs}
@@ -404,7 +418,7 @@ const AddDishPopup = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Unit</label>
+                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
                       <input
                         type="text"
                         value={servingInfo.nutritionFacts.carbsUnit}
@@ -416,7 +430,7 @@ const AddDishPopup = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Fat</label>
+                      <label className="block text-sm font-medium"><strong>Fat</strong> (*)</label>
                       <input
                         type="number"
                         value={servingInfo.nutritionFacts.totalFat}
@@ -428,7 +442,7 @@ const AddDishPopup = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Unit</label>
+                      <label className="block text-sm font-medium"><strong>Unit</strong></label>
                       <input
                         type="text"
                         value={servingInfo.nutritionFacts.fatUnit}
@@ -445,11 +459,11 @@ const AddDishPopup = ({
             ))}
 
             {/* Backend Message Display */}
-          {backendMessage && (
-            <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
-              {backendMessage}
-            </div>
-          )}
+            {backendMessage && (
+              <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
+                {backendMessage}
+              </div>
+            )}
 
             <div className="flex justify-between items-center">
               <button
