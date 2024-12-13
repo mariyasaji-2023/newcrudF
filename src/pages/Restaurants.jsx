@@ -107,10 +107,10 @@ const Restaurants = () => {
   const updateRestaurantList = (updatedRestaurant) => {
     // Reset to page 1 after adding or editing
     setCurrentPage(1);
-  
+
     setRestaurants((prevRestaurants) => {
       let updatedList;
-  
+
       if (mode === "edit") {
         updatedList = prevRestaurants.map((restaurant) =>
           restaurant._id === updatedRestaurant._id ? updatedRestaurant : restaurant
@@ -122,26 +122,26 @@ const Restaurants = () => {
           (restaurant) => restaurant._id !== selectedRestaurant._id
         );
       }
-  
+
       // Sort by `updatedAt` or `createdAt` to ensure the most recent is first
       updatedList = updatedList.sort((a, b) => {
         const dateA = new Date(a.updatedAt || a.createdAt);
         const dateB = new Date(b.updatedAt || b.createdAt);
         return dateB - dateA; // Descending order
       });
-  
+
       // Ensure we only show the first 20 restaurants for the current page
       const startIndex = (1 - 1) * 20;  // Since we're resetting to page 1, set the index to 0
       const endIndex = startIndex + 20;
       updatedList = updatedList.slice(startIndex, endIndex);
-  
+
       return updatedList;
     });
-  
+
     // Fetch the updated total restaurant count
     fetchTotalRestaurants();
   };
-  
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -150,7 +150,7 @@ const Restaurants = () => {
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 mx-8 mt-6 bg-white p-6 rounded-2xl shadow-lg">
+      <div className="flex flex-col md:flex-row justify-between items-center sticky top-0 z-50 space-y-4 md:space-y-0 mx-8 mt-6 bg-white p-6 rounded-2xl shadow-lg">
         <div className="w-full md:w-1/3">
           {/* SearchRestaurant Component */}
           <SearchRestaurant onSearch={setDebouncedQuery} />

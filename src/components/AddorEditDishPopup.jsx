@@ -36,10 +36,13 @@ const AddDishPopup = ({
           );
           if (selectedCategory) {
             setSubCategories(selectedCategory.subCategories || []);
-            setSelectedCategoryId(dish.categoryId);
+            setSelectedCategoryId(dish.categoryId); // Correctly setting categoryId
             setSelectedSubCategoryId(dish.subCategoryId || "");
           }
+          console.log("Selected Category ID:", selectedCategoryId);
+
         }
+        
       } catch (error) {
         console.error("Error fetching categories:", error);
         setBackendMessage("Error fetching categories.");
@@ -61,17 +64,23 @@ const AddDishPopup = ({
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
-
+  
     try {
       const response = await axios.put(
         `http://localhost:3001/api/restaurants/createCategory/${restaurantId}`,
         { categoryName: newCategory }
       );
-
-      const updatedCategories = response.data.categories;
+  
+      // Fetch the updated list of categories after adding a new one
+      const updatedCategoriesResponse = await axios.get(
+        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+      );
+      const updatedCategories = updatedCategoriesResponse.data.categories || [];
       setCategories(updatedCategories);
-      setNewCategory(""); // Clear the input field after successful addition
-
+  
+      // Clear the input field after successful addition
+      setNewCategory(""); 
+  
       // Select the newly added category
       const newlyAddedCategory = updatedCategories.find(
         (cat) => cat.categoryName === newCategory
@@ -86,24 +95,39 @@ const AddDishPopup = ({
       setBackendMessage("Error adding category.");
     }
   };
+  
 
   const handleAddSubCategory = async () => {
     if (!newSubCategory.trim() || !selectedCategoryId) return;
-
+  
     try {
+      // Make the API call to create the new subcategory
       const response = await axios.put(
         `http://localhost:3001/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
         { subCategoryName: newSubCategory }
       );
-
-      // Update the subcategories list after adding a new subcategory
-      setSubCategories((prev) => [...prev, response.data.subCategory]);
+  
+      // Fetch the updated subcategories from the backend after adding the new subcategory
+      const updatedCategoriesResponse = await axios.get(
+        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+      );
+      const updatedCategories = updatedCategoriesResponse.data.categories || [];
+  
+      // Find the category with the selected category ID and update the subcategories list
+      const updatedCategory = updatedCategories.find(
+        (cat) => cat.categoryId === selectedCategoryId
+      );
+      if (updatedCategory) {
+        setSubCategories(updatedCategory.subCategories || []);
+      }
+  
       setNewSubCategory(""); // Clear the input field after successful addition
     } catch (error) {
       console.error("Error adding subcategory:", error.response?.data || error.message);
       setBackendMessage("Error adding subcategory.");
     }
   };
+  
 
   const handleAddServingInfo = () => {
     setServingInfos((prev) => [
@@ -134,7 +158,7 @@ const AddDishPopup = ({
     const updatedServingInfos = [...servingInfos];
     const keys = field.split(".");
     let temp = updatedServingInfos[index];
-  
+
     if (field === "price") {
       // Validate numeric input for price
       if (value === "" || /^[0-9]+(\.[0-9]+)?$/.test(value)) {
@@ -159,7 +183,7 @@ const AddDishPopup = ({
       setServingInfos(updatedServingInfos);
     }
   };
-  
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -329,16 +353,16 @@ const AddDishPopup = ({
                   </button>
                 </div>
                 <div>
-  <label className="block text-sm font-medium mb-1">
-    <strong>Serving Size</strong> (*)
-  </label>
-  <input
-    type="text"
-    value={servingInfo.size}
-    onChange={(e) => handleChangeServingInfo(index, "size", e.target.value)}
-    className="w-full p-2 border rounded-md"
-  />
-</div>
+                  <label className="block text-sm font-medium mb-1">
+                    <strong>Serving Size</strong> (*)
+                  </label>
+                  <input
+                    type="text"
+                    value={servingInfo.size}
+                    onChange={(e) => handleChangeServingInfo(index, "size", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
 
 
                 <div>
