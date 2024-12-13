@@ -32,7 +32,7 @@ const Restaurants = () => {
         totalPages: fetchedTotalPages,
         totalRestaurants: fetchedTotalRestaurants,
       } = response.data;
-  
+
       setRestaurants(fetchedRestaurants);
       setTotalPages(fetchedTotalPages);
       setTotalRestaurants(fetchedTotalRestaurants);
@@ -44,7 +44,33 @@ const Restaurants = () => {
       setLoading(false);
     }
   };
-  
+
+  const fetchTotalRestaurants = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/restaurants/totalRestaurants', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data && data.totalRestaurants !== undefined) {
+        setTotalRestaurants(data.totalRestaurants);
+      } else {
+        setError('No restaurant count found');
+      }
+    } catch (error) {
+      setError(error.message);
+      setTotalRestaurants(0);
+    }
+  };
+
   useEffect(() => {
     fetchRestaurants(currentPage);
   }, [debouncedQuery, currentPage]);
@@ -111,9 +137,10 @@ const Restaurants = () => {
   
       return updatedList;
     });
+  
+    // Fetch the updated total restaurant count
+    fetchTotalRestaurants();
   };
-  
-  
   
 
   const formatDate = (dateString) => {
@@ -142,6 +169,13 @@ const Restaurants = () => {
           </button>
         </div>
       </div>
+      <div className="w-full flex justify-end px-12  items-center space-x-4">
+        <span className="text-lg font-semibold pt-4 text-gray-800">Total Restaurants:</span>
+        <span className="text-2xl pt-4 font-extrabold text-green-600">
+          {totalRestaurants}
+        </span>
+      </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 mx-8">
         {loading && <p>Loading...</p>}
