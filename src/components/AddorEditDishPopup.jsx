@@ -113,13 +113,13 @@ const AddDishPopup = ({
         price: "",
         nutritionFacts: {
           calories: "",
-          caloriesUnit: "kcal",
+          caloriesUnit: "",
           protein: "",
-          proteinUnit: "g",
+          proteinUnit: "",
           carbs: "",
-          carbsUnit: "g",
+          carbsUnit: "",
           totalFat: "",
-          fatUnit: "g",
+          fatUnit: "",
         },
       },
     ]);
@@ -206,12 +206,7 @@ const AddDishPopup = ({
             </button>
           </div>
 
-          {/* Backend Message Display */}
-          {backendMessage && (
-            <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
-              {backendMessage}
-            </div>
-          )}
+          
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Dish Name */}
@@ -448,6 +443,13 @@ const AddDishPopup = ({
                 </div>
               </div>
             ))}
+
+            {/* Backend Message Display */}
+          {backendMessage && (
+            <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
+              {backendMessage}
+            </div>
+          )}
 
             <div className="flex justify-between items-center">
               <button
