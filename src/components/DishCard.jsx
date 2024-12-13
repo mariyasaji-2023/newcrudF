@@ -1,101 +1,117 @@
 import React, { useState } from "react";
 import { MdEdit, MdDelete } from "react-icons/md";
-import DeleteDishPopup from "./DeleteDishPopup"; // Ensure this component is correctly imported
+import DeleteDishPopup from "./DeleteDishPopup"; // Ensure this is the correct path
+import axios from "axios"; // Ensure axios is installed and imported
 
-const DishCard = ({ dish, categoryName, subCategoryName, restaurantId }) => {
+const DishCard = ({
+  dish = {},
+  categoryName = "N/A",
+  subCategoryName = "N/A",
+  restaurantId,
+  setDishes, // Ensure this is passed as a prop
+  setCategories, // Ensure this is passed as a prop
+}) => {
+  
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  
 
   const {
-    dishName,
-    description,
-    servingInfos,
+    dishName = "Dish Name",
+    description = "No description provided",
+    servingInfos = [],
     createdAt,
     updatedAt,
   } = dish;
 
-  // State to track the currently selected serving size
   const [selectedServingInfo, setSelectedServingInfo] = useState(
     servingInfos[0]?.servingInfo || null
   );
 
-  // Handler for changing serving size
   const handleServingSizeChange = (servingInfo) => {
     setSelectedServingInfo(servingInfo.servingInfo);
   };
 
-  // If no serving infos, return a placeholder or null
-  if (!servingInfos || servingInfos.length === 0) {
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    const options = {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return date.toLocaleString("en-US", options);
+  };
+
+  const handleDeleteClick = () => setShowDeletePopup(true);
+  const closePopup = () => setShowDeletePopup(false);
+  const updateDishList = async (deletedDishId) => {
+    try {
+      // Refetch dishes and categories from the backend
+      const response = await axios.get(
+        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+      );
+      console.log(restaurantId); // Log restaurantId to make sure it's correct
+
+      // Optionally, remove the deleted dish from the state if it's still in the list
+      const updatedDishes = response.data.dishes.filter(
+        (dish) => dish._id !== deletedDishId
+      );
+      console.log(response.data)
+      setDishes(updatedDishes || []);
+      setCategories(response.data.categories || []);
+    } catch (err) {
+      console.error("Error refreshing dishes after delete:", err);
+    }
+  };
+  
+  if (!servingInfos.length) {
     return (
-      <div className="bg-white px-6 py-3 rounded-lg shadow-lg max-w-xs">
-        <p className="text-gray-500">No serving information available</p>
+      <div className="bg-white p-4 rounded-lg shadow-md text-center">
+        <p>No serving information available for this dish.</p>
       </div>
     );
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-
-    const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-
-    return `${month}/${day}/${year} ${hours}:${minutes}`;
-  };
-
-  const handleDeleteClick = () => {
-    setShowDeletePopup(true);
-  };
-
-  const closePopup = () => {
-    setShowDeletePopup(false);
-  };
-
-  const updateDishList = (deletedDishId) => {
-    // Update the dish list by removing the deleted dish
-    console.log("Dish deleted:", deletedDishId);
-  };
-
   return (
     <div className="relative bg-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer max-w-xs">
-      {/* Dish Name and Action Buttons */}
+      {/* Dish Name and Actions */}
       <div className="flex justify-between items-center mb-3">
         <h3
           className="font-semibold text-xl text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap"
-          title={dishName || "Dish Name"}
+          title={dishName}
         >
-          <strong>{dishName || "Dish Name"}</strong>
+          <strong>{dishName}</strong>
         </h3>
-        <button
-          className="absolute top-2 right-2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-transform duration-300 transform hover:scale-110"
-        >
-          <MdEdit />
-        </button>
-        <button
-          className="absolute top-2 right-14 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-transform duration-300 transform hover:scale-110"
-          onClick={handleDeleteClick}
-        >
-          <MdDelete />
-        </button>
+        <div className="flex space-x-2">
+          <button className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-transform duration-300 transform hover:scale-110">
+            <MdEdit />
+          </button>
+          <button
+            className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-transform duration-300 transform hover:scale-110"
+            onClick={handleDeleteClick}
+          >
+            <MdDelete />
+          </button>
+        </div>
       </div>
 
       {/* Category and Subcategory */}
       <div className="text-sm flex justify-between text-gray-600">
         <p>
-          <strong>Category :</strong>
+          <strong>Category:</strong>
         </p>
         <p>
-          <strong>{categoryName || "N/A"}</strong>
+          <strong>{categoryName}</strong>
         </p>
       </div>
       <div className="text-sm flex justify-between text-gray-600 mb-2">
         <p>
-          <strong>Subcategory :</strong>
+          <strong>Subcategory:</strong>
         </p>
         <p>
-          <strong>{subCategoryName || "N/A"}</strong>
+          <strong>{subCategoryName}</strong>
         </p>
       </div>
 
@@ -105,14 +121,13 @@ const DishCard = ({ dish, categoryName, subCategoryName, restaurantId }) => {
           <button
             key={index}
             onClick={() => handleServingSizeChange(info)}
-            className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${
-              selectedServingInfo?.size === info.servingInfo.size
+            className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${selectedServingInfo?.size === info.servingInfo.size
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-            }`}
-            title={info.servingInfo.size} // Tooltip showing full serving size
+              }`}
+            title={info.servingInfo.size}
           >
-            {info.servingInfo.size.slice(0, 5)} {/* Show only first 5 characters */}
+            {info.servingInfo.size.slice(0, 5)}
           </button>
         ))}
       </div>
@@ -122,55 +137,45 @@ const DishCard = ({ dish, categoryName, subCategoryName, restaurantId }) => {
         <div className="bg-blue-100 text-blue-800 p-3 rounded-lg shadow-md text-center">
           <p className="text-sm font-semibold">Calories</p>
           <p className="text-lg">
-            {selectedServingInfo?.nutritionFacts?.calories?.value || "N/A"} {" "}
+            {selectedServingInfo?.nutritionFacts?.calories?.value || "N/A"}{" "}
             {selectedServingInfo?.nutritionFacts?.calories?.unit || ""}
           </p>
         </div>
         <div className="bg-green-100 text-green-800 p-3 rounded-lg shadow-md text-center">
           <p className="text-sm font-semibold">Protein</p>
           <p className="text-lg">
-            {selectedServingInfo?.nutritionFacts?.protein?.value || "N/A"} {" "}
+            {selectedServingInfo?.nutritionFacts?.protein?.value || "N/A"}{" "}
             {selectedServingInfo?.nutritionFacts?.protein?.unit || ""}
           </p>
         </div>
         <div className="bg-yellow-100 text-yellow-800 p-3 rounded-lg shadow-md text-center">
           <p className="text-sm font-semibold">Carbs</p>
           <p className="text-lg">
-            {selectedServingInfo?.nutritionFacts?.carbs?.value || "N/A"} {" "}
+            {selectedServingInfo?.nutritionFacts?.carbs?.value || "N/A"}{" "}
             {selectedServingInfo?.nutritionFacts?.carbs?.unit || ""}
           </p>
         </div>
         <div className="bg-red-100 text-red-800 p-3 rounded-lg shadow-md text-center">
           <p className="text-sm font-semibold">Fat</p>
           <p className="text-lg">
-            {selectedServingInfo?.nutritionFacts?.totalFat?.value || "N/A"} {" "}
+            {selectedServingInfo?.nutritionFacts?.totalFat?.value || "N/A"}{" "}
             {selectedServingInfo?.nutritionFacts?.totalFat?.unit || ""}
           </p>
         </div>
       </div>
 
       {/* Price */}
-      <div className="text-sm bg-indigo-600 mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2 flex justify-center">
-        <p>
-          <strong>Price : $ {selectedServingInfo?.price || "N/A"}</strong>
-        </p>
+      <div className="text-sm bg-indigo-600 mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2">
+        <strong>Price: ${selectedServingInfo?.price || "N/A"}</strong>
       </div>
 
-      {/* Created and Updated At */}
-      <div className="text-xs flex text-gray-400 mt-1 space-x-2 justify-between">
+      {/* Dates */}
+      <div className="text-xs flex text-gray-400 mt-1 justify-between">
         <p>
-          <strong>Created At :</strong>
+          <strong>Created At:</strong> {formatDate(createdAt)}
         </p>
         <p>
-          <strong>Updated At :</strong>
-        </p>
-      </div>
-      <div className="text-xs flex text-gray-400 mt-1 space-x-2 justify-between">
-        <p>
-          <strong>{formatDate(createdAt)}</strong>
-        </p>
-        <p>
-          <strong>{formatDate(updatedAt)}</strong>
+          <strong>Updated At:</strong> {formatDate(updatedAt)}
         </p>
       </div>
 
@@ -178,7 +183,7 @@ const DishCard = ({ dish, categoryName, subCategoryName, restaurantId }) => {
       {showDeletePopup && (
         <DeleteDishPopup
           restaurantId={restaurantId}
-          dish={dish}
+          dish={dish} // Make sure this contains the _id
           closePopup={closePopup}
           updateDishList={updateDishList}
         />
