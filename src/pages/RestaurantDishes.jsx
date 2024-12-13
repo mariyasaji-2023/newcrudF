@@ -45,8 +45,19 @@ const RestaurantDishes = () => {
     fetchDishes();
   }, [restaurantId]);
 
-  const handleAddDish = (newDish) => {
+  const handleAddDish = async (newDish) => {
     setDishes((prevDishes) => [...prevDishes, newDish]); // Add the new dish directly to the state
+
+    try {
+      // Optionally, refetch dishes and categories from the backend to get the latest state
+      const response = await axios.get(
+        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+      );
+      setDishes(response.data.dishes || []);
+      setCategories(response.data.categories || []);
+    } catch (err) {
+      console.error("Error fetching dishes after adding:", err);
+    }
   };
 
   const togglePopup = () => {
