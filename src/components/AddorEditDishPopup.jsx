@@ -263,8 +263,8 @@ const AddDishPopup = ({
               </label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value.slice(0, 100))}
-                maxLength="100"
+                onChange={(e) => setDescription(e.target.value.slice(0, 150))}
+                maxLength="150"
                 className="w-full p-2 border rounded-md"
               />
               <small>{description.length}/150 characters</small>
