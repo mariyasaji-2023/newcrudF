@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdEdit, MdDelete } from "react-icons/md";
-import DeleteDishPopup from "./DeleteDishPopup"; 
-import axios from "axios"; 
+import DeleteDishPopup from "./DeleteDishPopup";
+import axios from "axios";
 const DishCard = ({
   dish = {},
   categoryName = "N/A",
@@ -89,13 +89,13 @@ const DishCard = ({
     <div>
       <div
         className="relative bg-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer max-w-xs"
-        onClick={openModal} // Open modal on dish name click
+      // Open modal on dish name click
       >
         {/* Dish Name and Actions */}
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex  justify-between items-center mb-3">
           <h3
             className="font-semibold text-xl text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap"
-            title={dishName}
+            title={dishName} onClick={openModal}
           >
             <strong>{dishName}</strong>
           </h3>
@@ -141,16 +141,15 @@ const DishCard = ({
         </div>
 
         {/* Serving Sizes Selection */}
-        <div className="flex justify-start space-x-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 justify-between space-x-2 mb-4">
           {servingInfos.map((info, index) => (
             <button
               key={index}
               onClick={() => handleServingSizeChange(info)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${
-                selectedServingInfo?.size === info.servingInfo.size
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-              }`}
+              className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${selectedServingInfo?.size === info.servingInfo.size
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-blue-200"
+                }`}
               title={info.servingInfo.size}
             >
               {info.servingInfo.size.slice(0, 5)}
@@ -159,7 +158,7 @@ const DishCard = ({
         </div>
 
         {/* Nutritional Facts */}
-        <div className="grid grid-cols-2 gap-2 mt-4">
+        <div className="grid grid-cols-2 gap-2 mt-4" onClick={openModal}>
           <div className="bg-blue-100 text-blue-800 p-3 rounded-lg shadow-md text-center">
             <p className="text-sm font-semibold">Calories</p>
             <p className="text-lg">
@@ -191,12 +190,12 @@ const DishCard = ({
         </div>
 
         {/* Price */}
-        <div className="text-sm bg-indigo-600 mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2">
+        <div className="text-sm bg-indigo-600 mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2" onClick={openModal}>
           <strong>Price: ${selectedServingInfo?.price || "N/A"}</strong>
         </div>
 
         {/* Dates */}
-        <div className="text-xs flex text-gray-400 mt-1 justify-between">
+        <div className="text-xs flex text-gray-400 mt-1 justify-between" onClick={openModal}>
           <p>
             <strong>Created At:</strong> {formatDate(createdAt)}
           </p>
@@ -254,25 +253,25 @@ const DishCard = ({
             </div>
 
             {/* Serving Sizes */}
-            <div className="flex justify-start space-x-2 mb-4">
+            <div className="grid grid-cols-3 gap-3 justify-start space-x-2 mb-4">
               {servingInfos.map((info, index) => (
                 <button
                   key={index}
                   onClick={() => handleServingSizeChange(info)}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${
-                    selectedServingInfo?.size === info.servingInfo.size
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-                  }`}
+                  className={`px-3 py-2 rounded-full text-sm transition-colors duration-300 ${selectedServingInfo?.size === info.servingInfo.size
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-800 hover:bg-blue-200"
+                    }`}
                   title={info.servingInfo.size}
                 >
-                  {info.servingInfo.size.slice(0, 5)}
+                  {info.servingInfo.size}
                 </button>
               ))}
             </div>
 
+
             {/* Nutritional Facts */}
-            <div className="grid grid-cols-2 gap-2 mt-4">
+            <div className="grid grid-cols-2 gap-6 mb-4 mx-8">
               <div className="bg-blue-100 text-blue-800 p-3 rounded-lg shadow-md text-center">
                 <p className="text-sm font-semibold">Calories</p>
                 <p className="text-lg">
@@ -306,8 +305,16 @@ const DishCard = ({
             </div>
 
             {/* Display the Price */}
-            <div className="text-sm bg-indigo-600 mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2">
+            <div className="text-sm bg-indigo-600 mx-32 mb-2 shadow-lg text-center rounded-sm py-3 text-white mt-2">
               <strong>Price: ${selectedServingInfo?.price || "N/A"}</strong>
+            </div>
+            <div className="text-xs flex text-gray-400 mt-1 justify-between" onClick={openModal}>
+              <p>
+                <strong>Created At:</strong> {formatDate(createdAt)}
+              </p>
+              <p>
+                <strong>Updated At:</strong> {formatDate(updatedAt)}
+              </p>
             </div>
 
             <button
@@ -316,6 +323,8 @@ const DishCard = ({
             >
               Close
             </button>
+
+
           </div>
         </div>
       )}
