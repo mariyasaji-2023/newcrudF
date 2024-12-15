@@ -15,7 +15,7 @@ const RestaurantDishes = () => {
   const [error, setError] = useState("");
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  
+
 
   // Fetch dishes and categories for a particular restaurant
   useEffect(() => {
@@ -121,50 +121,50 @@ const RestaurantDishes = () => {
 
       {/* Dishes Section */}
       {organizedDishes.map((category) => (
-  <div key={category.categoryName} className="mb-6">
-    {/* Render category dishes */}
-    {category.dishes.length > 0 && (
-      <div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          {category.dishes.map((dish) => (
-            <DishCard
-              key={dish._id}
-              dish={dish}
-              categoryName={category.categoryName}
-              subCategoryName={null}
-              restaurantId={restaurantId}
-              setDishes={setDishes} // Pass setDishes
-              setCategories={setCategories} // Pass setCategories
-            />
+        <div key={category.categoryName} className="mb-6">
+          {/* Render category dishes */}
+          {category.dishes.length > 0 && (
+            <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                {category.dishes.map((dish) => (
+                  <DishCard
+                    key={dish._id}
+                    dish={dish}
+                    categoryName={category.categoryName}
+                    subCategoryName={null}
+                    restaurantId={restaurantId}
+                    setDishes={setDishes} // Pass setDishes
+                    setCategories={setCategories} // Pass setCategories
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Render subcategories */}
+          {category.subCategories.map((subCategory) => (
+            <div key={subCategory.subCategoryName} className="mt-6">
+              {subCategory.dishes.length > 0 && (
+                <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                    {subCategory.dishes.map((dish) => (
+                      <DishCard
+                        key={dish._id}
+                        dish={dish}
+                        categoryName={category.categoryName}
+                        subCategoryName={subCategory.subCategoryName}
+                        restaurantId={restaurantId}
+                        setDishes={setDishes} // Pass setDishes
+                        setCategories={setCategories} // Pass setCategories
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
-      </div>
-    )}
-
-    {/* Render subcategories */}
-    {category.subCategories.map((subCategory) => (
-      <div key={subCategory.subCategoryName} className="mt-6">
-        {subCategory.dishes.length > 0 && (
-          <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
-              {subCategory.dishes.map((dish) => (
-                <DishCard
-                  key={dish._id}
-                  dish={dish}
-                  categoryName={category.categoryName}
-                  subCategoryName={subCategory.subCategoryName}
-                  restaurantId={restaurantId}
-                  setDishes={setDishes} // Pass setDishes
-                  setCategories={setCategories} // Pass setCategories
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    ))}
-  </div>
-))}
+      ))}
 
 
       {isPopupVisible && (
