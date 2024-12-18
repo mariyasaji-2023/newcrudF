@@ -228,10 +228,10 @@ const AddDishPopup = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-2">
-            <h2 className="text-xl font-semibold ml-40">
+            <h2 className="text-2xl font-bold ml-40">
               {mode === "add" ? "Add Dish" : "Edit Dish"}
             </h2>
             <button onClick={closePopup} className="text-gray-500 text-2xl">
