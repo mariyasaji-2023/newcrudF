@@ -3,6 +3,8 @@ import axios from 'axios';
 
 
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+console.log(baseUrl);
+
 
 const AddorEditRestaurantPopup = ({ restaurant, mode, closePopup, updateRestaurantList }) => {
   const [restaurantName, setRestaurantName] = useState(restaurant ? restaurant.restaurantName : '');
@@ -12,57 +14,80 @@ const AddorEditRestaurantPopup = ({ restaurant, mode, closePopup, updateRestaura
   // Handle form submit for adding or editing
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Validate restaurant name only (image is optional)
     if (!restaurantName) {
       setError('Restaurant name is required.');
       return;
     }
-
+  
     const normalizedRestaurantName = restaurantName.trim().toLowerCase();
-
-
+  
     setError(''); // Clear any previous errors
-
+  
     const formData = new FormData();
     formData.append('restaurantName', restaurantName);
-
+  
     if (logo) {
       formData.append('logo', logo); // Only append logo if it's provided
     }
-
+  
     try {
+      let response;
+  
       if (mode === 'edit') {
         // Edit logic: PUT request
+        if (!restaurant._id) {
+          setError('Restaurant ID is required for editing.');
+          return;
+        }
+        
         formData.append('id', restaurant._id); // Pass restaurant ID for update
-
-        const response = await axios.put(`${baseUrl}/api/restaurants/editRestaurant/${restaurant._id}`, formData, {
+  
+        response = await axios.put(`${baseUrl}/api/restaurants/editRestaurant/${restaurant._id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-
+        
         updateRestaurantList(response.data.restaurant); // Update restaurant list
         console.log('Restaurant updated:', response.data.restaurant);
       } else if (mode === 'add') {
         // Add logic: POST request
-        const response = await axios.post('${baseUrl}/api/restaurants/createRestaurant', formData, {
+        response = await axios.post(`${baseUrl}/api/restaurants/createRestaurant`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-
+  
         updateRestaurantList(response.data.restaurant); // Add to restaurant list
         console.log('New restaurant added:', response.data.restaurant);
-      }
-
-      closePopup(); // Close the popup after submission
-    } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        // Display backend error message
-        setError(err.response.data.message);
       } else {
-        console.error('Error submitting the restaurant:', err);
+        setError('Invalid mode specified.');
+        return;
+      }
+  
+      closePopup(); // Close the popup after submission
+  
+    } catch (err) {
+      if (err.response) {
+        // Check for backend response error
+        if (err.response.data && err.response.data.message) {
+          setError(err.response.data.message); // Display backend error message
+        } else if (err.response.status === 404) {
+          setError('Resource not found.');
+        } else {
+          setError(`Server error: ${err.response.statusText}`);
+        }
+      } else if (err.request) {
+        // Network error (request was made, but no response received)
+        setError('Network error. Please check your internet connection.');
+      } else {
+        // Unexpected error
         setError('An unexpected error occurred.');
       }
+  
+      console.error('Error submitting the restaurant:', err);
     }
   };
+  
+  
 
   // Handle file input change and validate
   const handleFileChange = (e) => {
