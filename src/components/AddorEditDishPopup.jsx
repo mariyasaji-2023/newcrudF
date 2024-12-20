@@ -158,10 +158,10 @@ const AddDishPopup = ({
     const updatedServingInfos = [...servingInfos];
     const keys = field.split(".");
     let temp = updatedServingInfos[index];
-  
+
     // Allow float validation for 'price' or any numeric field
     const isFloat = (val) => val === "" || /^[0-9]+(\.[0-9]*)?$/.test(val);
-  
+
     if (field === "price" || field.includes("price")) {
       if (isFloat(value)) {
         keys.forEach((key, i) => {
@@ -185,7 +185,7 @@ const AddDishPopup = ({
       setServingInfos(updatedServingInfos);
     }
   };
-  
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -373,7 +373,7 @@ const AddDishPopup = ({
                   <label className="block text-sm font-medium mb-1"><strong>Price in $</strong></label>
                   <input
                     type="number"
-                    step="0.01" 
+                    step="0.01"
                     value={servingInfo.price}
                     min="0"
                     onChange={(e) =>
@@ -390,7 +390,7 @@ const AddDishPopup = ({
                       <label className="block text-sm font-medium"><strong>Calories in kcal</strong> (*)</label>
                       <input
                         type="number"
-                        step="0.01" 
+                        step="0.01"
                         value={servingInfo.nutritionFacts.calories}
                         min="0"
                         onChange={(e) =>
@@ -404,14 +404,14 @@ const AddDishPopup = ({
                       <label className="block text-sm font-medium"><strong>Protein in g</strong> (*)</label>
                       <input
                         type="number"
-                        step="0.01" 
+                        step="0.01"
                         value={servingInfo.nutritionFacts.protein}
                         min="0"
                         onChange={(e) =>
                           handleChangeServingInfo(index, "nutritionFacts.protein", e.target.value)
                         }
                         className="w-full p-2 border rounded-md no-spinner"
-                        
+
                       />
                     </div>
 
@@ -419,7 +419,7 @@ const AddDishPopup = ({
                       <label className="block text-sm font-medium"><strong>Carbohydrates (Carbs) in g</strong> (*)</label>
                       <input
                         type="number"
-                        step="0.01" 
+                        step="0.01"
                         value={servingInfo.nutritionFacts.carbs}
                         min="0"
                         onChange={(e) =>
@@ -440,8 +440,8 @@ const AddDishPopup = ({
                           handleChangeServingInfo(index, "nutritionFacts.totalFat", e.target.value)
                         }
                         className="w-full p-2 border rounded-md no-spinner"
-                        
-                        
+
+
                       />
                     </div>
 
