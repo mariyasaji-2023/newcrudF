@@ -26,7 +26,12 @@ const RestaurantDishes = () => {
         const dishesResponse = await axios.get(
           `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
         );
-        setDishes(dishesResponse.data.dishes || []);
+
+        const sortedDishes = (dishesResponse.data.dishes || []).sort(
+          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+        );
+
+        setDishes(sortedDishes);
         setCategories(dishesResponse.data.categories || []);
         setRestaurantName(
           dishesResponse.data.restaurant?.name || `Restaurant ${restaurantId}`
@@ -36,7 +41,7 @@ const RestaurantDishes = () => {
         const countResponse = await axios.get(
           `http://localhost:3001/api/restaurants/dishCount/${restaurantId}`
         );
-        setDishCount(countResponse.data.dishCount || 0); // Set dish count
+        setDishCount(countResponse.data.dishCount || 0);
       } catch (err) {
         setError("Failed to load restaurant details. Please try again.");
         console.error(err);
@@ -129,15 +134,15 @@ const RestaurantDishes = () => {
     categoryName: category.categoryName,
     subCategories: category.subCategories.map((subCategory) => ({
       subCategoryName: subCategory.subCategoryName,
-      dishes: dishes.filter(
-        (dish) => dish.subCategoryId === subCategory.subCategoryId
-      ),
+      dishes: dishes
+        .filter((dish) => dish.subCategoryId === subCategory.subCategoryId)
+        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)), // Sort by updatedAt
     })),
-    dishes: dishes.filter(
-      (dish) => dish.categoryId === category.categoryId && !dish.subCategoryId
-    ),
+    dishes: dishes
+      .filter((dish) => dish.categoryId === category.categoryId && !dish.subCategoryId)
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)), // Sort by updatedAt
   }));
-
+  
   return (
     <div className="container mx-auto p-6">
       <div className="bg-white shadow-md p-4 flex items-center justify-between">
@@ -189,7 +194,7 @@ const RestaurantDishes = () => {
           <div key={category.categoryName} className="mb-6">
             {category.dishes.length > 0 && (
               <div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
                   {category.dishes.map((dish) => (
                     <DishCard
                       key={dish._id}

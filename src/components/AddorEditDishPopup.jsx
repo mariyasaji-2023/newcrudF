@@ -425,7 +425,7 @@ useEffect(() => {
                   <label className="block text-sm mb-1 font-medium"><strong>Nutrition Facts</strong></label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium"><strong>Calories in kcal</strong> (*)</label>
+                      <label className="block text-sm font-medium"><strong>Calories in cal</strong> (*)</label>
                       <input
                         type="number"
                         step="0.01"
