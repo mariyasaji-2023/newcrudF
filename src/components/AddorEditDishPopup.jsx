@@ -15,11 +15,38 @@ const AddDishPopup = ({
   const [newCategory, setNewCategory] = useState("");
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState("");
   const [newSubCategory, setNewSubCategory] = useState("");
-
   const [dishName, setDishName] = useState(dish?.dishName || "");
   const [description, setDescription] = useState(dish?.description || "");
   const [servingInfos, setServingInfos] = useState([]);
-  const [backendMessage, setBackendMessage] = useState(""); // Added backend message state
+  const [backendMessage, setBackendMessage] = useState("");
+
+  // Initialize form with dish data if in edit mode
+  useEffect(() => {
+    if (mode === "edit" && dish) {
+      setDishName(dish.dishName || "");
+      setDescription(dish.description || "");
+      setSelectedCategoryId(dish.categoryId || "");
+      setSelectedSubCategoryId(dish.subCategoryId || ""); // Set the subcategory here if available
+  
+      // Transform serving infos to match form structure
+      const transformedServingInfos = dish.servingInfos?.map(info => ({
+        size: info.servingInfo?.size || "",
+        price: info.servingInfo?.price || "",
+        nutritionFacts: {
+          calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
+          caloriesUnit: info.servingInfo?.nutritionFacts?.calories?.unit || "",
+          protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
+          proteinUnit: info.servingInfo?.nutritionFacts?.protein?.unit || "",
+          carbs: info.servingInfo?.nutritionFacts?.carbs?.value || "",
+          carbsUnit: info.servingInfo?.nutritionFacts?.carbs?.unit || "",
+          totalFat: info.servingInfo?.nutritionFacts?.totalFat?.value || "",
+          fatUnit: info.servingInfo?.nutritionFacts?.totalFat?.unit || ""
+        }
+      })) || [];
+      setServingInfos(transformedServingInfos);
+    }
+  }, [mode, dish]);
+  
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -36,13 +63,10 @@ const AddDishPopup = ({
           );
           if (selectedCategory) {
             setSubCategories(selectedCategory.subCategories || []);
-            setSelectedCategoryId(dish.categoryId); // Correctly setting categoryId
+            setSelectedCategoryId(dish.categoryId);
             setSelectedSubCategoryId(dish.subCategoryId || "");
           }
-          console.log("Selected Category ID:", selectedCategoryId);
-
         }
-
       } catch (error) {
         console.error("Error fetching categories:", error);
         setBackendMessage("Error fetching categories.");
@@ -58,9 +82,10 @@ const AddDishPopup = ({
         (cat) => cat.categoryId === selectedCategoryId
       );
       setSubCategories(selectedCategory?.subCategories || []);
-      setSelectedSubCategoryId("");
+      setSelectedSubCategoryId(dish?.subCategoryId || ""); // Set subcategory if already exists
     }
-  }, [selectedCategoryId, categories]);
+  }, [selectedCategoryId, categories, dish]);
+  
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
@@ -71,24 +96,21 @@ const AddDishPopup = ({
         { categoryName: newCategory }
       );
 
-      // Fetch the updated list of categories after adding a new one
       const updatedCategoriesResponse = await axios.get(
         `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
       setCategories(updatedCategories);
 
-      // Clear the input field after successful addition
       setNewCategory("");
 
-      // Select the newly added category
       const newlyAddedCategory = updatedCategories.find(
         (cat) => cat.categoryName === newCategory
       );
       if (newlyAddedCategory) {
-        setSelectedCategoryId(newlyAddedCategory.categoryId); // Select the new category
-        setSubCategories(newlyAddedCategory.subCategories || []); // Set subcategories if available
-        setSelectedSubCategoryId(""); // Reset subcategory selection
+        setSelectedCategoryId(newlyAddedCategory.categoryId);
+        setSubCategories(newlyAddedCategory.subCategories || []);
+        setSelectedSubCategoryId("");
       }
     } catch (error) {
       console.error("Error adding category:", error.response?.data || error.message);
@@ -96,38 +118,45 @@ const AddDishPopup = ({
     }
   };
 
-
   const handleAddSubCategory = async () => {
     if (!newSubCategory.trim() || !selectedCategoryId) return;
-
+  
     try {
-      // Make the API call to create the new subcategory
-      const response = await axios.put(
+      // Add the new subcategory
+      await axios.put(
         `http://localhost:3001/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
         { subCategoryName: newSubCategory }
       );
-
-      // Fetch the updated subcategories from the backend after adding the new subcategory
+  
+      // Fetch the updated categories
       const updatedCategoriesResponse = await axios.get(
         `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
-
-      // Find the category with the selected category ID and update the subcategories list
+  
+      // Find the updated category
       const updatedCategory = updatedCategories.find(
         (cat) => cat.categoryId === selectedCategoryId
       );
       if (updatedCategory) {
         setSubCategories(updatedCategory.subCategories || []);
+  
+        // Find the newly added subcategory and set it as selected
+        const newlyAddedSubCategory = updatedCategory.subCategories.find(
+          (subCat) => subCat.subCategoryName === newSubCategory
+        );
+        if (newlyAddedSubCategory) {
+          setSelectedSubCategoryId(newlyAddedSubCategory.subCategoryId);
+        }
       }
-
-      setNewSubCategory(""); // Clear the input field after successful addition
+  
+      setNewSubCategory(""); // Clear the new subcategory input
     } catch (error) {
       console.error("Error adding subcategory:", error.response?.data || error.message);
       setBackendMessage("Error adding subcategory.");
     }
   };
-
+  
 
   const handleAddServingInfo = () => {
     setServingInfos((prev) => [
@@ -159,7 +188,6 @@ const AddDishPopup = ({
     const keys = field.split(".");
     let temp = updatedServingInfos[index];
 
-    // Allow float validation for 'price' or any numeric field
     const isFloat = (val) => val === "" || /^[0-9]+(\.[0-9]*)?$/.test(val);
 
     if (field === "price" || field.includes("price")) {
@@ -174,7 +202,6 @@ const AddDishPopup = ({
         setServingInfos(updatedServingInfos);
       }
     } else {
-      // Handle other fields normally
       keys.forEach((key, i) => {
         if (i === keys.length - 1) {
           temp[key] = value;
@@ -186,10 +213,9 @@ const AddDishPopup = ({
     }
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setBackendMessage(""); // Clear previous messages
+    setBackendMessage("");
 
     const dishData = {
       dishName: dishName,
@@ -213,18 +239,24 @@ const AddDishPopup = ({
     };
 
     try {
-      const response = await axios.put(
-        `http://localhost:3001/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
-        dishData
-      );
+      let response;
+      if (mode === "edit") {
+        response = await axios.put(
+          `http://localhost:3001/api/restaurants/editDish/${dish._id}/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
+          dishData
+        );
+      } else {
+        response = await axios.put(
+          `http://localhost:3001/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
+          dishData
+        );
+      }
 
-      updateDishList(response.data.dish); // Add the new dish to the list
-      closePopup(); // Close the popup after successful submission
+      updateDishList(response.data.dish);
+      closePopup();
     } catch (error) {
-      console.error("Error adding dish:", error.response?.data || error.message);
-
-      // If backend provides a message, show it, otherwise use a default error message
-      setBackendMessage(error.response?.data?.message || "Error adding dish.");
+      console.error("Error saving dish:", error.response?.data || error.message);
+      setBackendMessage(error.response?.data?.message || `Error ${mode === "edit" ? "updating" : "adding"} dish.`);
     }
   };
 
@@ -241,9 +273,8 @@ const AddDishPopup = ({
             </button>
           </div>
           <div className="mb-2 flex justify-center">
-            <p>"Fields marked with an asterisk <strong>(*)</strong> are mandatory."</p>
+            <p>Fields marked with an asterisk <strong>(*)</strong> are mandatory.</p>
           </div>
-
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Dish Name */}
@@ -271,7 +302,6 @@ const AddDishPopup = ({
               />
               <small>{description.length}/150 characters</small>
             </div>
-
 
             {/* Category */}
             <div>
@@ -347,7 +377,7 @@ const AddDishPopup = ({
             {servingInfos.map((servingInfo, index) => (
               <div key={index} className="space-y-4 border p-4 rounded-md">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium"><strong> Serving {index + 1}</strong></h4>
+                  <h4 className="font-medium"><strong>Serving {index + 1}</strong></h4>
                   <button
                     type="button"
                     onClick={() => handleRemoveServingInfo(index)}
@@ -367,7 +397,6 @@ const AddDishPopup = ({
                     className="w-full p-2 border rounded-md no-spinner"
                   />
                 </div>
-
 
                 <div>
                   <label className="block text-sm font-medium mb-1"><strong>Price in $</strong></label>
@@ -411,7 +440,6 @@ const AddDishPopup = ({
                           handleChangeServingInfo(index, "nutritionFacts.protein", e.target.value)
                         }
                         className="w-full p-2 border rounded-md no-spinner"
-
                       />
                     </div>
 
@@ -440,11 +468,8 @@ const AddDishPopup = ({
                           handleChangeServingInfo(index, "nutritionFacts.totalFat", e.target.value)
                         }
                         className="w-full p-2 border rounded-md no-spinner"
-
-
                       />
                     </div>
-
                   </div>
                 </div>
               </div>
