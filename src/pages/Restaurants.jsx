@@ -71,9 +71,24 @@ const Restaurants = () => {
     }
   };
 
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchRestaurants(currentPage);
+    }, 300); // Debounce by 300ms
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [debouncedQuery, currentPage]);
+
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 on search query change
+  }, [debouncedQuery]);
+
   useEffect(() => {
     fetchRestaurants(currentPage);
   }, [debouncedQuery, currentPage]);
+
 
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {
@@ -107,10 +122,10 @@ const Restaurants = () => {
   const updateRestaurantList = (updatedRestaurant) => {
     // Reset to page 1 after adding or editing
     setCurrentPage(1);
-  
+
     setRestaurants((prevRestaurants) => {
       let updatedList;
-  
+
       if (mode === "edit") {
         updatedList = prevRestaurants.map((restaurant) =>
           restaurant._id === updatedRestaurant._id ? updatedRestaurant : restaurant
@@ -122,26 +137,26 @@ const Restaurants = () => {
           (restaurant) => restaurant._id !== selectedRestaurant._id
         );
       }
-  
+
       // Sort by `updatedAt` or `createdAt` to ensure the most recent is first
       updatedList = updatedList.sort((a, b) => {
         const dateA = new Date(a.updatedAt || a.createdAt);
         const dateB = new Date(b.updatedAt || b.createdAt);
         return dateB - dateA; // Descending order
       });
-  
+
       // Ensure we only show the first 20 restaurants for the current page
       const startIndex = (1 - 1) * 20;  // Since we're resetting to page 1, set the index to 0
       const endIndex = startIndex + 20;
       updatedList = updatedList.slice(startIndex, endIndex);
-  
+
       return updatedList;
     });
-  
+
     // Fetch the updated total restaurant count
     fetchTotalRestaurants();
   };
-  
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

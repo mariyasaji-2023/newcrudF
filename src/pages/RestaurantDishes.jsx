@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import DishCard from "../components/DishCard";
 import AddDishPopup from "../components/AddorEditDishPopup";
-import { MdAddCircleOutline, MdClear } from "react-icons/md";
+import { MdAddCircleOutline, MdClear, MdArrowUpward } from "react-icons/md";
 import SearchDish from "../components/SearchDish";
 
 const RestaurantDishes = () => {
@@ -16,6 +16,7 @@ const RestaurantDishes = () => {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   // Fetch dishes and categories for a particular restaurant
   useEffect(() => {
@@ -24,11 +25,6 @@ const RestaurantDishes = () => {
         const response = await axios.get(
           `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
         );
-
-        // Debugging logs
-        console.log("Full response:", response.data);
-        console.log("Restaurant object:", response.data.restaurant);
-        console.log("Restaurant name:", response.data.restaurant?.name);
 
         setDishes(response.data.dishes || []);
         setCategories(response.data.categories || []);
@@ -45,6 +41,25 @@ const RestaurantDishes = () => {
 
     fetchDishes();
   }, [restaurantId]);
+
+  // Handle scroll event to show/hide the scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 200) {
+        setShowScrollToTop(true);
+      } else {
+        setShowScrollToTop(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Handle Search Query and Fetch from Backend
   const handleSearch = async (query) => {
@@ -69,7 +84,6 @@ const RestaurantDishes = () => {
     }
   };
 
-  // Handle clearing search and trigger page refresh
   const handleClearSearch = () => {
     setSearchQuery("");
     setSearchResults(null);
@@ -120,15 +134,15 @@ const RestaurantDishes = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="sticky top-0 z-10 bg-white shadow-md p-4 flex items-center justify-between">
+      <div className="bg-white shadow-md p-4 flex items-center justify-between">
         {/* Search */}
         <div className="w-full md:w-1/3 relative">
-          <SearchDish 
+          <SearchDish
             value={searchQuery}
             onSearch={(query) => {
               setSearchQuery(query);
               handleSearch(query);
-            }} 
+            }}
           />
           {/* Clear search icon */}
           {searchQuery && (
@@ -160,10 +174,8 @@ const RestaurantDishes = () => {
 
       {/* Dishes Section */}
       {searchResults === null ? (
-        // Show organized dishes if no search has been performed
         organizedDishes.map((category) => (
           <div key={category.categoryName} className="mb-6">
-            {/* Render category dishes */}
             {category.dishes.length > 0 && (
               <div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
@@ -181,8 +193,6 @@ const RestaurantDishes = () => {
                 </div>
               </div>
             )}
-
-            {/* Render subcategories */}
             {category.subCategories.map((subCategory) => (
               <div key={subCategory.subCategoryName} className="mt-6">
                 {subCategory.dishes.length > 0 && (
@@ -207,10 +217,8 @@ const RestaurantDishes = () => {
           </div>
         ))
       ) : searchResults.length === 0 ? (
-        // No search results found, display a message
         <p>No dishes found matching your search.</p>
       ) : (
-        // Display the search results if they exist
         <div className="grid grid-cols-1 sm:grid-cols-2 mt-4 lg:grid-cols-3 gap-6">
           {searchResults.map((dish) => (
             <DishCard
@@ -233,6 +241,16 @@ const RestaurantDishes = () => {
           updateDishList={handleAddDish}
           restaurantId={restaurantId}
         />
+      )}
+
+      {/* Scroll to Top Button */}
+      {showScrollToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-4 z-40 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-transform transform hover:scale-110"
+        >
+          <MdArrowUpward className="text-2xl" />
+        </button>
       )}
     </div>
   );
