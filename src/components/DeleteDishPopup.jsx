@@ -40,8 +40,8 @@ const [dishes, setDishes] = useState([]);
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div className="bg-white p-8 rounded-lg max-w-sm w-full">
         <h2 className="text-2xl font-semibold mb-4">Delete Dish</h2>
         <h3 className="text-xl mb-4">{dish.dishName}</h3>
         
