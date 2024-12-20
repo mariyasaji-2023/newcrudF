@@ -3,77 +3,64 @@ import res from '/images/res4.jpg';
 import dish from '/images/dish2.jpg';
 import MessagePopup from '../components/MessagePopup';
 
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
 const Home = () => {
   const [totalRestaurants, setTotalRestaurants] = useState(0);
   const [totalDishes, setTotalDishes] = useState(0);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchTotalRestaurants = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/restaurants/totalRestaurants', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const [restaurantsResponse, dishesResponse] = await Promise.all([
+          fetch(`${baseUrl}/totalRestaurants`),
+          fetch(`${baseUrl}/totalDishes`)
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!restaurantsResponse.ok || !dishesResponse.ok) {
+          throw new Error('Failed to fetch data');
         }
 
-        const data = await response.json();
+        const restaurantsData = await restaurantsResponse.json();
+        const dishesData = await dishesResponse.json();
 
-        if (data && data.totalRestaurants !== undefined) {
-          setTotalRestaurants(data.totalRestaurants);
-        } else {
-          setError('No restaurant count found');
-        }
-      } catch (error) {
-        setError(error.message);
+        setTotalRestaurants(restaurantsData.totalRestaurants ?? 0);
+        setTotalDishes(dishesData.totalDishes ?? 0);
+      } catch (err) {
+        setError(err.message);
         setTotalRestaurants(0);
-      }
-    };
-
-    const fetchTotalDishes = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/restaurants/totalDishes', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data && data.totalDishes !== undefined) {
-          setTotalDishes(data.totalDishes);
-        } else {
-          setError('No dish count found');
-        }
-      } catch (error) {
-        setError(error.message);
         setTotalDishes(0);
       }
     };
 
-    fetchTotalRestaurants();
-    fetchTotalDishes();
+    fetchData();
   }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
-      <MessagePopup />
+      {error && (
+        <div className="max-w-6xl mx-auto mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                {error}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {/* Restaurants Section */}
         <div className="transform transition duration-500 hover:scale-105 hover:rotate-1 hover:shadow-2xl 
           bg-white rounded-2xl shadow-xl border-2 border-gray-100 
-          overflow-hidden relative perspective-1000 hover:translate-y-[-10px]">
+          overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-r from-green-100 via-white to-green-100 opacity-20"></div>
 
           <div className="relative z-10 p-6 flex flex-col items-center text-center">
@@ -96,12 +83,6 @@ const Home = () => {
               </h3>
             </div>
 
-            {error && (
-              <div className="text-red-500 mt-2 bg-red-50 p-2 rounded-lg">
-                Error: {error}
-              </div>
-            )}
-
             <p className="text-gray-500 mt-2 italic">
               (restaurants added till now)
             </p>
@@ -111,7 +92,7 @@ const Home = () => {
         {/* Dishes Section */}
         <div className="transform transition duration-500 hover:scale-105 hover:-rotate-1 hover:shadow-2xl 
           bg-white rounded-2xl shadow-xl border-2 border-gray-100 
-          overflow-hidden relative perspective-1000 hover:translate-y-[-10px]">
+          overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-r from-red-100 via-white to-red-100 opacity-20"></div>
 
           <div className="relative z-10 p-6 flex flex-col items-center text-center">

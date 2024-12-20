@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 const SearchDish = ({ onSearch }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      onSearch(searchQuery);
+      onSearch(searchQuery); // Call the passed function when query changes
     }, 300); // 300ms debounce
 
     return () => {
