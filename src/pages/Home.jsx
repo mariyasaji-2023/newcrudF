@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import res from '/images/res4.jpg';
 import dish from '/images/dish2.jpg';
-import MessagePopup from '../components/MessagePopup';
+
 
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
 
@@ -14,8 +14,8 @@ const Home = () => {
     const fetchData = async () => {
       try {
         const [restaurantsResponse, dishesResponse] = await Promise.all([
-          fetch(`${baseUrl}/totalRestaurants`),
-          fetch(`${baseUrl}/totalDishes`)
+          fetch(`${baseUrl}/api/restaurants/totalRestaurants`),
+          fetch(`${baseUrl}/api/restaurants/totalDishes`)
         ]);
 
         if (!restaurantsResponse.ok || !dishesResponse.ok) {

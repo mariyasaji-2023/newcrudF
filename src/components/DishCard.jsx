@@ -4,6 +4,9 @@ import DeleteDishPopup from "./DeleteDishPopup";
 import AddDishPopup from "./AddorEditDishPopup";
 import axios from "axios";
 
+
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
 const DishCard = ({
   dish = {},
   categoryName = "N/A",
@@ -58,7 +61,7 @@ const DishCard = ({
   const updateDishList = async (updatedDish) => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
       );
       setDishes(response.data.dishes || []);
       setCategories(response.data.categories || []);

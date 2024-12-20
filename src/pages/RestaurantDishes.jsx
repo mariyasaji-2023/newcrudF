@@ -6,6 +6,8 @@ import AddDishPopup from "../components/AddorEditDishPopup";
 import { MdAddCircleOutline, MdClear, MdArrowUpward } from "react-icons/md";
 import SearchDish from "../components/SearchDish";
 
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
 const RestaurantDishes = () => {
   const { restaurantId } = useParams();
   const [dishes, setDishes] = useState([]);
@@ -24,7 +26,7 @@ const RestaurantDishes = () => {
     const fetchRestaurantData = async () => {
       try {
         const dishesResponse = await axios.get(
-          `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+          `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
         );
 
         const sortedDishes = (dishesResponse.data.dishes || []).sort(
@@ -39,7 +41,7 @@ const RestaurantDishes = () => {
 
         // Fetch dish count
         const countResponse = await axios.get(
-          `http://localhost:3001/api/restaurants/dishCount/${restaurantId}`
+          `${baseUrl}/api/restaurants/dishCount/${restaurantId}`
         );
         setDishCount(countResponse.data.dishCount || 0);
       } catch (err) {
@@ -82,7 +84,7 @@ const RestaurantDishes = () => {
     try {
       const normalizedQuery = query.trim().toLowerCase();
       const response = await axios.get(
-        `http://localhost:3001/api/restaurants/searchDish/${restaurantId}?query=${normalizedQuery}`
+        `${baseUrl}/api/restaurants/searchDish/${restaurantId}?query=${normalizedQuery}`
       );
       if (response.data.results.length === 0) {
         setSearchResults([]);
@@ -104,7 +106,7 @@ const RestaurantDishes = () => {
   const handleAddDish = async (newDish) => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
       );
       setDishes(response.data.dishes || []);
       setCategories(response.data.categories || []);

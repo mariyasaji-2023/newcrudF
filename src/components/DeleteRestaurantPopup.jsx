@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 
+
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
 const DeleteRestaurantPopup = ({ restaurant, closePopup, updateRestaurantList }) => {
   const [deleteInput, setDeleteInput] = useState('');
   const [error, setError] = useState(''); // State for validation errors
@@ -17,7 +20,7 @@ const DeleteRestaurantPopup = ({ restaurant, closePopup, updateRestaurantList })
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:3001/api/restaurants/deleteRestaurant/${restaurant._id}`, {
+      const response = await fetch(`${baseUrl}/api/restaurants/deleteRestaurant/${restaurant._id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json', // Correct content type for sending JSON

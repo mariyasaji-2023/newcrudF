@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
 const AddorEditRestaurantPopup = ({ restaurant, mode, closePopup, updateRestaurantList }) => {
   const [restaurantName, setRestaurantName] = useState(restaurant ? restaurant.restaurantName : '');
   const [logo, setLogo] = useState(null); // Changed to store the file
@@ -33,7 +36,7 @@ const AddorEditRestaurantPopup = ({ restaurant, mode, closePopup, updateRestaura
         // Edit logic: PUT request
         formData.append('id', restaurant._id); // Pass restaurant ID for update
 
-        const response = await axios.put(`http://localhost:3001/api/restaurants/editRestaurant/${restaurant._id}`, formData, {
+        const response = await axios.put(`${baseUrl}/api/restaurants/editRestaurant/${restaurant._id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
 
@@ -41,7 +44,7 @@ const AddorEditRestaurantPopup = ({ restaurant, mode, closePopup, updateRestaura
         console.log('Restaurant updated:', response.data.restaurant);
       } else if (mode === 'add') {
         // Add logic: POST request
-        const response = await axios.post('http://localhost:3001/api/restaurants/createRestaurant', formData, {
+        const response = await axios.post('${baseUrl}/api/restaurants/createRestaurant', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
 

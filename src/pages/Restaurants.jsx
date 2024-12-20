@@ -6,6 +6,7 @@ import axios from "axios";
 import SearchRestaurant from "../components/SearchRestaurant";
 import AddorEditRestaurantPopup from "../components/AddorEditRestaurantPopup";
 import DeleteRestaurantPopup from "../components/DeleteRestaurantPopup";
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -25,7 +26,7 @@ const Restaurants = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/restaurants/allRestaurants?page=${page}&search=${debouncedQuery}`
+        `${baseUrl}/api/restaurants/allRestaurants?page=${page}&search=${debouncedQuery}`
       );
       const {
         restaurants: fetchedRestaurants,
@@ -47,7 +48,7 @@ const Restaurants = () => {
 
   const fetchTotalRestaurants = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/restaurants/totalRestaurants', {
+      const response = await fetch('${baseUrl}/api/restaurants/totalRestaurants', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +206,7 @@ const Restaurants = () => {
                 <Link to={`/restaurant/${restaurant._id}`}>
                   <img
                     className="rounded-t-xl w-full h-40 object-cover"
-                    src={`http://localhost:3001/public${restaurant.logo}`}
+                    src={`${baseUrl}/public${restaurant.logo}`}
                     alt={restaurant.name}
                   />
                 </Link>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { MdClose } from "react-icons/md";
 import axios from "axios";
 
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
 const AddDishPopup = ({
   mode = "add",
   closePopup,
@@ -51,7 +53,7 @@ useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+          `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
         );
         const fetchedCategories = response.data.categories || [];
         setCategories(fetchedCategories);
@@ -91,12 +93,12 @@ useEffect(() => {
 
     try {
       const response = await axios.put(
-        `http://localhost:3001/api/restaurants/createCategory/${restaurantId}`,
+        `${baseUrl}/api/restaurants/createCategory/${restaurantId}`,
         { categoryName: newCategory }
       );
 
       const updatedCategoriesResponse = await axios.get(
-        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
       setCategories(updatedCategories);
@@ -123,13 +125,13 @@ useEffect(() => {
     try {
       // Add the new subcategory
       await axios.put(
-        `http://localhost:3001/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
+        `${baseUrl}/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
         { subCategoryName: newSubCategory }
       );
   
       // Fetch the updated categories
       const updatedCategoriesResponse = await axios.get(
-        `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
   
@@ -248,12 +250,12 @@ useEffect(() => {
         });
   
         response = await axios.put(
-          `http://localhost:3001/api/restaurants/editDish/${dish._id}/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
+          `${baseUrl}/api/restaurants/editDish/${dish._id}/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
           dishData
         );
       } else {
         response = await axios.put(
-          `http://localhost:3001/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
+          `${baseUrl}/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
           dishData
         );
       }
