@@ -11,6 +11,7 @@ const RestaurantDishes = () => {
   const [dishes, setDishes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [restaurantName, setRestaurantName] = useState("");
+  const [dishCount, setDishCount] = useState(0); // State to store dish count
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -18,19 +19,24 @@ const RestaurantDishes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // Fetch dishes and categories for a particular restaurant
+  // Fetch dishes, categories, and dish count for a particular restaurant
   useEffect(() => {
-    const fetchDishes = async () => {
+    const fetchRestaurantData = async () => {
       try {
-        const response = await axios.get(
+        const dishesResponse = await axios.get(
           `http://localhost:3001/api/restaurants/allDishes/${restaurantId}`
         );
-
-        setDishes(response.data.dishes || []);
-        setCategories(response.data.categories || []);
+        setDishes(dishesResponse.data.dishes || []);
+        setCategories(dishesResponse.data.categories || []);
         setRestaurantName(
-          response.data.restaurant?.name || `Restaurant ${restaurantId}`
+          dishesResponse.data.restaurant?.name || `Restaurant ${restaurantId}`
         );
+
+        // Fetch dish count
+        const countResponse = await axios.get(
+          `http://localhost:3001/api/restaurants/dishCount/${restaurantId}`
+        );
+        setDishCount(countResponse.data.dishCount || 0); // Set dish count
       } catch (err) {
         setError("Failed to load restaurant details. Please try again.");
         console.error(err);
@@ -39,7 +45,7 @@ const RestaurantDishes = () => {
       }
     };
 
-    fetchDishes();
+    fetchRestaurantData();
   }, [restaurantId]);
 
   // Handle scroll event to show/hide the scroll-to-top button
@@ -171,7 +177,12 @@ const RestaurantDishes = () => {
           </button>
         </div>
       </div>
-
+      <div className="w-full flex justify-end px-12  items-center space-x-4">
+        <span className="text-lg font-semibold pt-4 text-gray-800">Total Dishes:</span>
+        <span className="text-2xl pt-4 font-extrabold text-green-600">
+          {dishCount}
+        </span>
+      </div>
       {/* Dishes Section */}
       {searchResults === null ? (
         organizedDishes.map((category) => (
