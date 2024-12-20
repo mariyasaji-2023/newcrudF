@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 
+
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
 const DeleteDishPopup = ({ restaurantId, dish, closePopup, updateDishList }) => {
   const [deleteInput, setDeleteInput] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +22,7 @@ const [dishes, setDishes] = useState([]);
       console.log("Delete ID:", deleteInput);
   
       const response = await fetch(
-        `http://localhost:3001/api/restaurants/deleteDish/${restaurantId}/${dish._id}`, 
+        `${baseUrl}/api/restaurants/deleteDish/${restaurantId}/${dish._id}`, 
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
