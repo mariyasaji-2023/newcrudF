@@ -76,19 +76,19 @@ const Restaurants = () => {
     const delayDebounceFn = setTimeout(() => {
       fetchRestaurants(currentPage);
     }, 300); // Debounce by 300ms
-  
+
     return () => clearTimeout(delayDebounceFn);
   }, [debouncedQuery, currentPage]);
-  
-  
+
+
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 on search query change
   }, [debouncedQuery]);
-  
+
   useEffect(() => {
     fetchRestaurants(currentPage);
   }, [debouncedQuery, currentPage]);
-  
+
 
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {

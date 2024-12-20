@@ -21,31 +21,30 @@ const AddDishPopup = ({
   const [backendMessage, setBackendMessage] = useState("");
 
   // Initialize form with dish data if in edit mode
-  useEffect(() => {
-    if (mode === "edit" && dish) {
-      setDishName(dish.dishName || "");
-      setDescription(dish.description || "");
-      setSelectedCategoryId(dish.categoryId || "");
-      setSelectedSubCategoryId(dish.subCategoryId || ""); // Set the subcategory here if available
-  
-      // Transform serving infos to match form structure
-      const transformedServingInfos = dish.servingInfos?.map(info => ({
-        size: info.servingInfo?.size || "",
-        price: info.servingInfo?.price || "",
-        nutritionFacts: {
-          calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
-          caloriesUnit: info.servingInfo?.nutritionFacts?.calories?.unit || "",
-          protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
-          proteinUnit: info.servingInfo?.nutritionFacts?.protein?.unit || "",
-          carbs: info.servingInfo?.nutritionFacts?.carbs?.value || "",
-          carbsUnit: info.servingInfo?.nutritionFacts?.carbs?.unit || "",
-          totalFat: info.servingInfo?.nutritionFacts?.totalFat?.value || "",
-          fatUnit: info.servingInfo?.nutritionFacts?.totalFat?.unit || ""
-        }
-      })) || [];
-      setServingInfos(transformedServingInfos);
-    }
-  }, [mode, dish]);
+// Initialize form with dish data if in edit mode
+useEffect(() => {
+  if (mode === "edit" && dish) {
+    setDishName(dish.dishName || "");
+    setDescription(dish.description || "");
+    
+    // Store both current and selected category IDs
+    setSelectedCategoryId(dish.categoryId || "");
+    setSelectedSubCategoryId(dish.subCategoryId || "");
+
+    // Transform serving infos to match form structure
+    const transformedServingInfos = dish.servingInfos?.map(info => ({
+      size: info.servingInfo?.size || "",
+      price: info.servingInfo?.price || "",
+      nutritionFacts: {
+        calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
+        protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
+        carbs: info.servingInfo?.nutritionFacts?.carbs?.value || "",
+        totalFat: info.servingInfo?.nutritionFacts?.totalFat?.value || "",
+      }
+    })) || [];
+    setServingInfos(transformedServingInfos);
+  }
+}, [mode, dish]);
   
 
   useEffect(() => {
@@ -215,48 +214,58 @@ const AddDishPopup = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Form submitted!");
     setBackendMessage("");
-
+  
     const dishData = {
       dishName: dishName,
       description: description,
-      categoryId: selectedCategoryId,
-      subCategoryId: selectedSubCategoryId,
+      originalCategoryId: dish?.categoryId || "", // Ensure the categoryId is always a string, even if undefined
+      originalSubCategoryId: dish?.subCategoryId || "", // Default to empty string if undefined
       servingInfos: servingInfos.map((info) => ({
         size: info.size,
         price: info.price,
         nutritionFacts: {
           calories: info.nutritionFacts.calories,
-          caloriesUnit: info.nutritionFacts.caloriesUnit,
           protein: info.nutritionFacts.protein,
-          proteinUnit: info.nutritionFacts.proteinUnit,
           carbs: info.nutritionFacts.carbs,
-          carbsUnit: info.nutritionFacts.carbsUnit,
           totalFat: info.nutritionFacts.totalFat,
-          fatUnit: info.nutritionFacts.fatUnit,
         },
       })),
     };
-
+    
+  
     try {
       let response;
       if (mode === "edit") {
+        // Log the IDs for debugging
+        console.log('Editing dish with IDs:', {
+          dishId: dish._id,
+          newCategoryId: selectedCategoryId,
+          newSubCategoryId: selectedSubCategoryId,
+          originalCategoryId: dish?.categoryId,
+          originalSubCategoryId: dish?.subCategoryId
+        });
+  
         response = await axios.put(
-          `http://localhost:3001/api/restaurants/editDish/${dish._id}/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
+          `http://localhost:3001/api/restaurants/editDish/${dish._id}/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
           dishData
         );
       } else {
         response = await axios.put(
-          `http://localhost:3001/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
+          `http://localhost:3001/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
           dishData
         );
       }
-
+  
       updateDishList(response.data.dish);
       closePopup();
     } catch (error) {
       console.error("Error saving dish:", error.response?.data || error.message);
-      setBackendMessage(error.response?.data?.message || `Error ${mode === "edit" ? "updating" : "adding"} dish.`);
+      setBackendMessage(
+        error.response?.data?.message || 
+        `Error ${mode === "edit" ? "updating" : "adding"} dish. ${error.response?.data?.details || ''}`
+      );
     }
   };
 
