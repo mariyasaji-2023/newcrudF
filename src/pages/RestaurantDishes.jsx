@@ -13,7 +13,7 @@ const RestaurantDishes = () => {
   const [dishes, setDishes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [restaurantName, setRestaurantName] = useState("");
-  const [dishCount, setDishCount] = useState(0); // State to store dish count
+  const [dishCount, setDishCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -21,60 +21,71 @@ const RestaurantDishes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // Fetch dishes, categories, and dish count for a particular restaurant
+  // Fetch dish count separately
+  const fetchDishCount = async () => {
+    try {
+      const countResponse = await axios.get(
+        `${baseUrl}/api/restaurants/dishCount/${restaurantId}`
+      );
+      setDishCount(countResponse.data.dishCount || 0);
+    } catch (err) {
+      console.error("Error fetching dish count:", err);
+    }
+  };
+
+  // Update dishes and count
+  const updateDishesAndCount = async () => {
+    try {
+      const dishesResponse = await axios.get(
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
+      );
+
+      const sortedDishes = (dishesResponse.data.dishes || []).sort(
+        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
+
+      setDishes(sortedDishes);
+      setCategories(dishesResponse.data.categories || []);
+      setRestaurantName(
+        dishesResponse.data.restaurant?.name || `Restaurant ${restaurantId}`
+      );
+      await fetchDishCount();
+    } catch (err) {
+      console.error("Error updating dishes:", err);
+      setError("Failed to load restaurant details. Please try again.");
+    }
+  };
+
+  // Initial data fetch
   useEffect(() => {
-    const fetchRestaurantData = async () => {
+    const fetchInitialData = async () => {
       try {
-        const dishesResponse = await axios.get(
-          `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
-        );
-
-        const sortedDishes = (dishesResponse.data.dishes || []).sort(
-          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-        );
-
-        setDishes(sortedDishes);
-        setCategories(dishesResponse.data.categories || []);
-        setRestaurantName(
-          dishesResponse.data.restaurant?.name || `Restaurant ${restaurantId}`
-        );
-
-        // Fetch dish count
-        const countResponse = await axios.get(
-          `${baseUrl}/api/restaurants/dishCount/${restaurantId}`
-        );
-        setDishCount(countResponse.data.dishCount || 0);
+        await updateDishesAndCount();
       } catch (err) {
-        setError("Failed to load restaurant details. Please try again.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRestaurantData();
+    fetchInitialData();
   }, [restaurantId]);
 
-  // Handle scroll event to show/hide the scroll-to-top button
+  // Scroll to top functionality
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 200) {
-        setShowScrollToTop(true);
-      } else {
-        setShowScrollToTop(false);
-      }
+      setShowScrollToTop(window.scrollY > 200);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Handle Search Query and Fetch from Backend
+  // Search functionality
   const handleSearch = async (query) => {
     if (!query.trim()) {
       setSearchResults(null);
@@ -86,11 +97,7 @@ const RestaurantDishes = () => {
       const response = await axios.get(
         `${baseUrl}/api/restaurants/searchDish/${restaurantId}?query=${normalizedQuery}`
       );
-      if (response.data.results.length === 0) {
-        setSearchResults([]);
-      } else {
-        setSearchResults(response.data.results);
-      }
+      setSearchResults(response.data.results.length === 0 ? [] : response.data.results);
     } catch (error) {
       console.error("Error searching dishes:", error);
       setSearchResults([]);
@@ -103,33 +110,18 @@ const RestaurantDishes = () => {
     window.location.reload();
   };
 
-  const handleAddDish = async (newDish) => {
-    try {
-      const response = await axios.get(
-        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
-      );
-      setDishes(response.data.dishes || []);
-      setCategories(response.data.categories || []);
-    } catch (err) {
-      console.error("Error fetching dishes after adding:", err);
-    }
-  };
-
+  // Popup handlers
   const togglePopup = () => {
-    setIsPopupVisible((prevState) => !prevState);
+    setIsPopupVisible(prev => !prev);
   };
 
-  const handleAddDishClick = () => {
-    setIsPopupVisible(true);
+  const handleAddDish = async () => {
+    await updateDishesAndCount();
+    setIsPopupVisible(false); // Explicitly set popup visibility to false
   };
 
-  if (loading) {
-    return <p className="text-center text-xl">Loading dishes...</p>;
-  }
-
-  if (error) {
-    return <p className="text-center text-red-500">{error}</p>;
-  }
+  if (loading) return <p className="text-center text-xl">Loading dishes...</p>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
 
   // Organize dishes by category and subcategory
   const organizedDishes = categories.map((category) => ({
@@ -138,17 +130,16 @@ const RestaurantDishes = () => {
       subCategoryName: subCategory.subCategoryName,
       dishes: dishes
         .filter((dish) => dish.subCategoryId === subCategory.subCategoryId)
-        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)), // Sort by updatedAt
+        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
     })),
     dishes: dishes
       .filter((dish) => dish.categoryId === category.categoryId && !dish.subCategoryId)
-      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)), // Sort by updatedAt
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
   }));
-  
+
   return (
     <div className="container mx-auto p-6">
       <div className="bg-white shadow-md p-4 flex items-center justify-between">
-        {/* Search */}
         <div className="w-full md:w-1/3 relative">
           <SearchDish
             value={searchQuery}
@@ -157,7 +148,6 @@ const RestaurantDishes = () => {
               handleSearch(query);
             }}
           />
-          {/* Clear search icon */}
           {searchQuery && (
             <button
               className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
@@ -168,15 +158,13 @@ const RestaurantDishes = () => {
           )}
         </div>
 
-        {/* Center Heading */}
         <h2 className="text-2xl font-bold text-center mx-4">
           Dishes for {restaurantName}
         </h2>
 
-        {/* Add Dish Button */}
         <div className="w-full md:w-1/3 flex justify-end">
           <button
-            onClick={handleAddDishClick}
+            onClick={togglePopup}
             className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full px-6 py-3 shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center group"
           >
             <MdAddCircleOutline className="text-2xl transition-transform duration-300" />
@@ -184,13 +172,14 @@ const RestaurantDishes = () => {
           </button>
         </div>
       </div>
-      <div className="w-full flex justify-end px-12  items-center space-x-4">
+
+      <div className="w-full flex justify-end px-12 items-center space-x-4">
         <span className="text-lg font-semibold pt-4 text-gray-800">Total Dishes:</span>
         <span className="text-2xl pt-4 font-extrabold text-green-600">
           {dishCount}
         </span>
       </div>
-      {/* Dishes Section */}
+
       {searchResults === null ? (
         organizedDishes.map((category) => (
           <div key={category.categoryName} className="mb-6">
@@ -206,6 +195,7 @@ const RestaurantDishes = () => {
                       restaurantId={restaurantId}
                       setDishes={setDishes}
                       setCategories={setCategories}
+                      onDishUpdate={updateDishesAndCount}
                     />
                   ))}
                 </div>
@@ -225,6 +215,7 @@ const RestaurantDishes = () => {
                           restaurantId={restaurantId}
                           setDishes={setDishes}
                           setCategories={setCategories}
+                          onDishUpdate={updateDishesAndCount}
                         />
                       ))}
                     </div>
@@ -247,6 +238,7 @@ const RestaurantDishes = () => {
               restaurantId={restaurantId}
               setDishes={setDishes}
               setCategories={setCategories}
+              onDishUpdate={updateDishesAndCount}
             />
           ))}
         </div>
@@ -261,7 +253,6 @@ const RestaurantDishes = () => {
         />
       )}
 
-      {/* Scroll to Top Button */}
       {showScrollToTop && (
         <button
           onClick={scrollToTop}

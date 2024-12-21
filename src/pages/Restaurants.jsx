@@ -48,7 +48,7 @@ const Restaurants = () => {
 
   const fetchTotalRestaurants = async () => {
     try {
-      const response = await fetch('${baseUrl}/api/restaurants/totalRestaurants', {
+      const response = await fetch(`${baseUrl}/api/restaurants/totalRestaurants`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
