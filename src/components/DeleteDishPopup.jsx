@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 
-
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
 
-const DeleteDishPopup = ({ restaurantId, dish, closePopup, updateDishList }) => {
+const DeleteDishPopup = ({ restaurantId, dish, closePopup, onDeleteSuccess }) => {
   const [deleteInput, setDeleteInput] = useState('');
   const [error, setError] = useState('');
-const [dishes, setDishes] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,10 +15,6 @@ const [dishes, setDishes] = useState([]);
     }
   
     try {
-      console.log("Restaurant ID:", restaurantId);
-      console.log("Dish ID:", dish._id);
-      console.log("Delete ID:", deleteInput);
-  
       const response = await fetch(
         `${baseUrl}/api/restaurants/deleteDish/${restaurantId}/${dish._id}`, 
         {
@@ -34,7 +28,7 @@ const [dishes, setDishes] = useState([]);
   
       if (!response.ok) throw new Error(data.message || 'Failed to delete dish');
   
-      updateDishList(dish._id);
+      await onDeleteSuccess();
       closePopup();
     } catch (err) {
       console.error('Error deleting the dish:', err);
@@ -44,7 +38,7 @@ const [dishes, setDishes] = useState([]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-  <div className="bg-white p-8 rounded-lg max-w-sm w-full">
+      <div className="bg-white p-8 rounded-lg max-w-sm w-full">
         <h2 className="text-2xl font-semibold mb-4">Delete Dish</h2>
         <h3 className="text-xl mb-4">{dish.dishName}</h3>
         

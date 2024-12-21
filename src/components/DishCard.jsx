@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MdEdit, MdDelete } from "react-icons/md";
 import DeleteDishPopup from "./DeleteDishPopup";
 import AddDishPopup from "./AddorEditDishPopup";
 import axios from "axios";
-
 
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
 
@@ -14,6 +13,7 @@ const DishCard = ({
   restaurantId,
   setDishes,
   setCategories,
+  onDishUpdate,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
@@ -21,6 +21,10 @@ const DishCard = ({
   const [selectedServingInfo, setSelectedServingInfo] = useState(
     dish.servingInfos?.[0]?.servingInfo || null
   );
+
+  useEffect(() => {
+    setSelectedServingInfo(dish.servingInfos?.[0]?.servingInfo || null);
+  }, [dish]);
 
   const {
     dishName = "Dish Name",
@@ -52,13 +56,31 @@ const DishCard = ({
     e.stopPropagation();
     setShowEditPopup(true);
   };
-  
+
   const closePopup = () => {
     setShowDeletePopup(false);
     setShowEditPopup(false);
   };
 
-  const updateDishList = async (updatedDish) => {
+  const handleDeleteSuccess = async () => {
+    if (onDishUpdate) {
+      await onDishUpdate();
+    } else {
+      await updateDishList();
+    }
+    closePopup();
+  };
+
+  const handleEditSuccess = async () => {
+    if (onDishUpdate) {
+      await onDishUpdate();
+      // Reset selected serving info after update
+      setSelectedServingInfo(dish.servingInfos?.[0]?.servingInfo || null);
+    }
+    closePopup();
+  };
+
+  const updateDishList = async () => {
     try {
       const response = await axios.get(
         `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
@@ -138,11 +160,10 @@ const DishCard = ({
             <button
               key={index}
               onClick={() => handleServingSizeChange(info)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${
-                selectedServingInfo?.size === info.servingInfo.size
+              className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${selectedServingInfo?.size === info.servingInfo.size
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-              }`}
+                }`}
               title={info.servingInfo.size}
             >
               {info.servingInfo.size.slice(0, 5)}
@@ -204,7 +225,7 @@ const DishCard = ({
           restaurantId={restaurantId}
           dish={dish}
           closePopup={closePopup}
-          updateDishList={updateDishList}
+          onDeleteSuccess={handleDeleteSuccess}
         />
       )}
 
@@ -213,7 +234,7 @@ const DishCard = ({
           mode="edit"
           dish={dish}
           closePopup={closePopup}
-          updateDishList={updateDishList}
+          updateDishList={handleEditSuccess}
           restaurantId={restaurantId}
         />
       )}
@@ -244,11 +265,10 @@ const DishCard = ({
                 <button
                   key={index}
                   onClick={() => handleServingSizeChange(info)}
-                  className={`px-3 py-2 rounded-full text-sm transition-colors duration-300 ${
-                    selectedServingInfo?.size === info.servingInfo.size
+                  className={`px-3 py-2 rounded-full text-sm transition-colors duration-300 ${selectedServingInfo?.size === info.servingInfo.size
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-                  }`}
+                    }`}
                   title={info.servingInfo.size}
                 >
                   {info.servingInfo.size}
