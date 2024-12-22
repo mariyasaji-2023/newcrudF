@@ -22,32 +22,31 @@ const AddDishPopup = ({
   const [servingInfos, setServingInfos] = useState([]);
   const [backendMessage, setBackendMessage] = useState("");
 
-  // Initialize form with dish data if in edit mode
-// Initialize form with dish data if in edit mode
-useEffect(() => {
-  if (mode === "edit" && dish) {
-    setDishName(dish.dishName || "");
-    setDescription(dish.description || "");
-    
-    // Store both current and selected category IDs
-    setSelectedCategoryId(dish.categoryId || "");
-    setSelectedSubCategoryId(dish.subCategoryId || "");
+  // Initialize form with dish data if in edit mode----------->
+  useEffect(() => {
+    if (mode === "edit" && dish) {
+      setDishName(dish.dishName || "");
+      setDescription(dish.description || "");
 
-    // Transform serving infos to match form structure
-    const transformedServingInfos = dish.servingInfos?.map(info => ({
-      size: info.servingInfo?.size || "",
-      price: info.servingInfo?.price || "",
-      nutritionFacts: {
-        calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
-        protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
-        carbs: info.servingInfo?.nutritionFacts?.carbs?.value || "",
-        totalFat: info.servingInfo?.nutritionFacts?.totalFat?.value || "",
-      }
-    })) || [];
-    setServingInfos(transformedServingInfos);
-  }
-}, [mode, dish]);
-  
+      // Store both current and selected category IDs----------->
+      setSelectedCategoryId(dish.categoryId || "");
+      setSelectedSubCategoryId(dish.subCategoryId || "");
+
+      // Transform serving infos to match form structure----->
+      const transformedServingInfos =
+        dish.servingInfos?.map((info) => ({
+          size: info.servingInfo?.size || "",
+          price: info.servingInfo?.price || "",
+          nutritionFacts: {
+            calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
+            protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
+            carbs: info.servingInfo?.nutritionFacts?.carbs?.value || "",
+            totalFat: info.servingInfo?.nutritionFacts?.totalFat?.value || "",
+          },
+        })) || [];
+      setServingInfos(transformedServingInfos);
+    }
+  }, [mode, dish]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -86,7 +85,6 @@ useEffect(() => {
       setSelectedSubCategoryId(dish?.subCategoryId || ""); // Set subcategory if already exists
     }
   }, [selectedCategoryId, categories, dish]);
-  
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
@@ -114,35 +112,38 @@ useEffect(() => {
         setSelectedSubCategoryId("");
       }
     } catch (error) {
-      console.error("Error adding category:", error.response?.data || error.message);
+      console.error(
+        "Error adding category:",
+        error.response?.data || error.message
+      );
       setBackendMessage("Error adding category.");
     }
   };
 
   const handleAddSubCategory = async () => {
     if (!newSubCategory.trim() || !selectedCategoryId) return;
-  
+
     try {
-      // Add the new subcategory
+      // Add the new subcategory------->
       await axios.put(
         `${baseUrl}/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
         { subCategoryName: newSubCategory }
       );
-  
-      // Fetch the updated categories
+
+      // Fetch the updated categories----->
       const updatedCategoriesResponse = await axios.get(
         `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
-  
-      // Find the updated category
+
+      // Find the updated category---------->
       const updatedCategory = updatedCategories.find(
         (cat) => cat.categoryId === selectedCategoryId
       );
       if (updatedCategory) {
         setSubCategories(updatedCategory.subCategories || []);
-  
-        // Find the newly added subcategory and set it as selected
+
+        // Find the newly added subcategory and set it as selected----->
         const newlyAddedSubCategory = updatedCategory.subCategories.find(
           (subCat) => subCat.subCategoryName === newSubCategory
         );
@@ -150,14 +151,16 @@ useEffect(() => {
           setSelectedSubCategoryId(newlyAddedSubCategory.subCategoryId);
         }
       }
-  
+
       setNewSubCategory(""); // Clear the new subcategory input
     } catch (error) {
-      console.error("Error adding subcategory:", error.response?.data || error.message);
+      console.error(
+        "Error adding subcategory:",
+        error.response?.data || error.message
+      );
       setBackendMessage("Error adding subcategory.");
     }
   };
-  
 
   const handleAddServingInfo = () => {
     setServingInfos((prev) => [
@@ -218,7 +221,7 @@ useEffect(() => {
     e.preventDefault();
     console.log("Form submitted!");
     setBackendMessage("");
-  
+
     const dishData = {
       dishName: dishName,
       description: description,
@@ -235,38 +238,45 @@ useEffect(() => {
         },
       })),
     };
-    
-  
+
     try {
       let response;
       if (mode === "edit") {
-        // Log the IDs for debugging
-        console.log('Editing dish with IDs:', {
+        console.log("Editing dish with IDs:", {
           dishId: dish._id,
           newCategoryId: selectedCategoryId,
           newSubCategoryId: selectedSubCategoryId,
           originalCategoryId: dish?.categoryId,
-          originalSubCategoryId: dish?.subCategoryId
+          originalSubCategoryId: dish?.subCategoryId,
         });
-  
+
         response = await axios.put(
-          `${baseUrl}/api/restaurants/editDish/${dish._id}/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
+          `${baseUrl}/api/restaurants/editDish/${
+            dish._id
+          }/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
           dishData
         );
       } else {
         response = await axios.put(
-          `${baseUrl}/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ''}`,
+          `${baseUrl}/api/restaurants/createDish/${selectedCategoryId}/${
+            selectedSubCategoryId || ""
+          }`,
           dishData
         );
       }
-  
+
       updateDishList(response.data.dish);
       closePopup();
     } catch (error) {
-      console.error("Error saving dish:", error.response?.data || error.message);
+      console.error(
+        "Error saving dish:",
+        error.response?.data || error.message
+      );
       setBackendMessage(
-        error.response?.data?.message || 
-        `Error ${mode === "edit" ? "updating" : "adding"} dish. ${error.response?.data?.details || ''}`
+        error.response?.data?.message ||
+          `Error ${mode === "edit" ? "updating" : "adding"} dish. ${
+            error.response?.data?.details || ""
+          }`
       );
     }
   };
@@ -284,13 +294,17 @@ useEffect(() => {
             </button>
           </div>
           <div className="mb-2 flex justify-center">
-            <p>Fields marked with an asterisk <strong>(*)</strong> are mandatory.</p>
+            <p>
+              Fields marked with an asterisk <strong>(*)</strong> are mandatory.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Dish Name */}
             <div>
-              <label className="block text-sm font-medium mb-1"><strong>Dish Name</strong> (*)</label>
+              <label className="block text-sm font-medium mb-1">
+                <strong>Dish Name</strong> (*)
+              </label>
               <input
                 type="text"
                 value={dishName}
@@ -316,7 +330,9 @@ useEffect(() => {
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium mb-1"><strong>Category</strong> (*)</label>
+              <label className="block text-sm font-medium mb-1">
+                <strong>Category</strong> (*)
+              </label>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedCategoryId}
@@ -324,7 +340,9 @@ useEffect(() => {
                   className="flex-grow p-2 border rounded-md"
                   required
                 >
-                  <option value=""><strong>Select Category</strong></option>
+                  <option value="">
+                    <strong>Select Category</strong>
+                  </option>
                   {categories.map((cat) => (
                     <option key={cat.categoryId} value={cat.categoryId}>
                       {cat.categoryName}
@@ -350,7 +368,9 @@ useEffect(() => {
 
             {/* Subcategory */}
             <div>
-              <label className="block text-sm font-medium mb-1"><strong>Subcategory</strong> (only if one exists)</label>
+              <label className="block text-sm font-medium mb-1">
+                <strong>Subcategory</strong> (only if one exists)
+              </label>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedSubCategoryId}
@@ -358,9 +378,14 @@ useEffect(() => {
                   className="flex-grow p-2 border rounded-md"
                   disabled={!selectedCategoryId}
                 >
-                  <option value=""><strong>Select Subcategory</strong></option>
+                  <option value="">
+                    <strong>Select Subcategory</strong>
+                  </option>
                   {subCategories.map((subCat) => (
-                    <option key={subCat.subCategoryId} value={subCat.subCategoryId}>
+                    <option
+                      key={subCat.subCategoryId}
+                      value={subCat.subCategoryId}
+                    >
                       {subCat.subCategoryName}
                     </option>
                   ))}
@@ -388,7 +413,9 @@ useEffect(() => {
             {servingInfos.map((servingInfo, index) => (
               <div key={index} className="space-y-4 border p-4 rounded-md">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium"><strong>Serving {index + 1}</strong></h4>
+                  <h4 className="font-medium">
+                    <strong>Serving {index + 1}</strong>
+                  </h4>
                   <button
                     type="button"
                     onClick={() => handleRemoveServingInfo(index)}
@@ -404,13 +431,17 @@ useEffect(() => {
                   <input
                     type="text"
                     value={servingInfo.size}
-                    onChange={(e) => handleChangeServingInfo(index, "size", e.target.value)}
+                    onChange={(e) =>
+                      handleChangeServingInfo(index, "size", e.target.value)
+                    }
                     className="w-full p-2 border rounded-md no-spinner"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1"><strong>Price in $</strong></label>
+                  <label className="block text-sm font-medium mb-1">
+                    <strong>Price in $</strong>
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -424,59 +455,85 @@ useEffect(() => {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1 font-medium"><strong>Nutrition Facts</strong></label>
+                  <label className="block text-sm mb-1 font-medium">
+                    <strong>Nutrition Facts</strong>
+                  </label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium"><strong>Calories in cal</strong> (*)</label>
+                      <label className="block text-sm font-medium">
+                        <strong>Calories in cal</strong> (*)
+                      </label>
                       <input
                         type="number"
                         step="0.01"
                         value={servingInfo.nutritionFacts.calories}
                         min="0"
                         onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.calories", e.target.value)
+                          handleChangeServingInfo(
+                            index,
+                            "nutritionFacts.calories",
+                            e.target.value
+                          )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium"><strong>Protein in g</strong> (*)</label>
+                      <label className="block text-sm font-medium">
+                        <strong>Protein in g</strong> (*)
+                      </label>
                       <input
                         type="number"
                         step="0.01"
                         value={servingInfo.nutritionFacts.protein}
                         min="0"
                         onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.protein", e.target.value)
+                          handleChangeServingInfo(
+                            index,
+                            "nutritionFacts.protein",
+                            e.target.value
+                          )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium"><strong>Carbohydrates (Carbs) in g</strong> (*)</label>
+                      <label className="block text-sm font-medium">
+                        <strong>Carbohydrates (Carbs) in g</strong> (*)
+                      </label>
                       <input
                         type="number"
                         step="0.01"
                         value={servingInfo.nutritionFacts.carbs}
                         min="0"
                         onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.carbs", e.target.value)
+                          handleChangeServingInfo(
+                            index,
+                            "nutritionFacts.carbs",
+                            e.target.value
+                          )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium"><strong>Total Fat in g</strong> (*)</label>
+                      <label className="block text-sm font-medium">
+                        <strong>Total Fat in g</strong> (*)
+                      </label>
                       <input
                         type="number"
                         step="0.01"
                         value={servingInfo.nutritionFacts.totalFat}
                         min="0"
                         onChange={(e) =>
-                          handleChangeServingInfo(index, "nutritionFacts.totalFat", e.target.value)
+                          handleChangeServingInfo(
+                            index,
+                            "nutritionFacts.totalFat",
+                            e.target.value
+                          )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
                       />
