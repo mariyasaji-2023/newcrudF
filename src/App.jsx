@@ -5,6 +5,7 @@ import Header from "./components/HeaderComponent";
 import Home from "./pages/Home";
 import Restaurants from "./pages/Restaurants";
 import RestaurantDishes from "./pages/RestaurantDishes";
+import Categories from "./pages/Categories";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           path="/restaurant/:restaurantId"
           element={<RestaurantDishes />}
         />
+        <Route path="/Categories" element={<Categories/>} />
       </Routes>
     </>
   );

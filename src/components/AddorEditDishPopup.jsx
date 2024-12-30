@@ -36,7 +36,7 @@ const AddDishPopup = ({
       const transformedServingInfos =
         dish.servingInfos?.map((info) => ({
           size: info.servingInfo?.size || "",
-          price: info.servingInfo?.price || "",
+          allergen: info.servingInfo?.allergen || "",
           nutritionFacts: {
             calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
             protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
@@ -167,7 +167,7 @@ const AddDishPopup = ({
       ...prev,
       {
         size: "",
-        price: "",
+        allergen: "",
         nutritionFacts: {
           calories: "",
           caloriesUnit: "",
@@ -191,20 +191,17 @@ const AddDishPopup = ({
     const updatedServingInfos = [...servingInfos];
     const keys = field.split(".");
     let temp = updatedServingInfos[index];
-
-    const isFloat = (val) => val === "" || /^[0-9]+(\.[0-9]*)?$/.test(val);
-
-    if (field === "price" || field.includes("price")) {
-      if (isFloat(value)) {
-        keys.forEach((key, i) => {
-          if (i === keys.length - 1) {
-            temp[key] = value;
-          } else {
-            temp = temp[key];
-          }
-        });
-        setServingInfos(updatedServingInfos);
-      }
+  
+    // No validation for "price" field
+    if (field === "allergen" || field.includes("allergen")) {
+      keys.forEach((key, i) => {
+        if (i === keys.length - 1) {
+          temp[key] = value; // Allow any text value for price
+        } else {
+          temp = temp[key];
+        }
+      });
+      setServingInfos(updatedServingInfos);
     } else {
       keys.forEach((key, i) => {
         if (i === keys.length - 1) {
@@ -216,7 +213,7 @@ const AddDishPopup = ({
       setServingInfos(updatedServingInfos);
     }
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form submitted!");
@@ -229,7 +226,7 @@ const AddDishPopup = ({
       originalSubCategoryId: dish?.subCategoryId || "", // Default to empty string if undefined
       servingInfos: servingInfos.map((info) => ({
         size: info.size,
-        price: info.price,
+        allergen: info.allergen,
         nutritionFacts: {
           calories: info.nutritionFacts.calories,
           protein: info.nutritionFacts.protein,
@@ -251,15 +248,13 @@ const AddDishPopup = ({
         });
 
         response = await axios.put(
-          `${baseUrl}/api/restaurants/editDish/${
-            dish._id
+          `${baseUrl}/api/restaurants/editDish/${dish._id
           }/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
           dishData
         );
       } else {
         response = await axios.put(
-          `${baseUrl}/api/restaurants/createDish/${selectedCategoryId}/${
-            selectedSubCategoryId || ""
+          `${baseUrl}/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ""
           }`,
           dishData
         );
@@ -274,9 +269,8 @@ const AddDishPopup = ({
       );
       setBackendMessage(
         error.response?.data?.message ||
-          `Error ${mode === "edit" ? "updating" : "adding"} dish. ${
-            error.response?.data?.details || ""
-          }`
+        `Error ${mode === "edit" ? "updating" : "adding"} dish. ${error.response?.data?.details || ""
+        }`
       );
     }
   };
@@ -321,11 +315,11 @@ const AddDishPopup = ({
               </label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value.slice(0, 150))}
-                maxLength="150"
+                onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+                maxLength="500"
                 className="w-full p-2 border rounded-md"
               />
-              <small>{description.length}/150 characters</small>
+              <small>{description.length}/500 characters</small>
             </div>
 
             {/* Category */}
@@ -440,18 +434,17 @@ const AddDishPopup = ({
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    <strong>Price in $</strong>
+                    <strong>allergen </strong>
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    value={servingInfo.price}
-                    min="0"
+                    type="text" // Change from "number" to "text"
+                    value={servingInfo.allergen}
                     onChange={(e) =>
-                      handleChangeServingInfo(index, "price", e.target.value)
+                      handleChangeServingInfo(index, "allergen", e.target.value)
                     }
-                    className="w-full p-2 border rounded-md no-spinner"
+                    className="w-full p-2 border rounded-md"
                   />
+
                 </div>
 
                 <div>
