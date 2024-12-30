@@ -8,4 +8,8 @@ export default defineConfig({
     host: '0.0.0.0', // Allows access from any device in the same network
     port: 5173,      // Ensures the port remains the same
  },
+ build: {
+  outDir: 'dist',  // Specifies the build output directory
+  emptyOutDir: true, // Ensures clean builds
+}
 });
