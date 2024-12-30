@@ -77,6 +77,7 @@ const EditCategoryModal = ({ category, isOpen, onClose, onUpdate }) => {
             />
           </div>
           <div className="flex justify-end space-x-3">
+            
             <button
               type="button"
               onClick={onClose}
