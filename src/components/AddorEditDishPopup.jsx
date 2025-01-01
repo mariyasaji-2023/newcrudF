@@ -36,7 +36,7 @@ const AddDishPopup = ({
       const transformedServingInfos =
         dish.servingInfos?.map((info) => ({
           size: info.servingInfo?.size || "",
-          allergen: info.servingInfo?.allergen || "",
+          Url: info.servingInfo?. Url|| "",
           nutritionFacts: {
             calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
             protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
@@ -167,7 +167,7 @@ const AddDishPopup = ({
       ...prev,
       {
         size: "",
-        allergen: "",
+        Url: "",
         nutritionFacts: {
           calories: "",
           caloriesUnit: "",
@@ -193,7 +193,7 @@ const AddDishPopup = ({
     let temp = updatedServingInfos[index];
   
     // No validation for "price" field
-    if (field === "allergen" || field.includes("allergen")) {
+    if (field === "Url" || field.includes("Url")) {
       keys.forEach((key, i) => {
         if (i === keys.length - 1) {
           temp[key] = value; // Allow any text value for price
@@ -226,7 +226,7 @@ const AddDishPopup = ({
       originalSubCategoryId: dish?.subCategoryId || "", // Default to empty string if undefined
       servingInfos: servingInfos.map((info) => ({
         size: info.size,
-        allergen: info.allergen,
+        Url: info.Url,
         nutritionFacts: {
           calories: info.nutritionFacts.calories,
           protein: info.nutritionFacts.protein,
@@ -315,11 +315,11 @@ const AddDishPopup = ({
               </label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value.slice(0, 500))}
-                maxLength="500"
+                onChange={(e) => setDescription(e.target.value.slice(0,1000))}
+                maxLength="1000"
                 className="w-full p-2 border rounded-md"
               />
-              <small>{description.length}/500 characters</small>
+              <small>{description.length}/1000 characters</small>
             </div>
 
             {/* Category */}
@@ -434,13 +434,13 @@ const AddDishPopup = ({
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    <strong>allergen </strong>
+                    <strong>Url </strong>
                   </label>
                   <input
                     type="text" // Change from "number" to "text"
-                    value={servingInfo.allergen}
+                    value={servingInfo.Url}
                     onChange={(e) =>
-                      handleChangeServingInfo(index, "allergen", e.target.value)
+                      handleChangeServingInfo(index, "Url", e.target.value)
                     }
                     className="w-full p-2 border rounded-md"
                   />

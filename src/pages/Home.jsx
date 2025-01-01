@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import resImage from '/images/res4.jpg';
 import dishImage from '/images/dish2.jpg';
 
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
 
 const Home = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState({ totalRestaurants: 0, totalDishes: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,6 +53,15 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto mb-8">
+        <button
+          onClick={() => navigate('/categories')}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
+        >
+          Manage Restaurant Categories
+        </button>
+      </div>
+
       {error && (
         <div className="max-w-6xl mx-auto mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded">
           <div className="flex">
@@ -76,6 +87,7 @@ const Home = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        {/* Rest of the existing code remains the same */}
         {[
           {
             title: 'Restaurants',
