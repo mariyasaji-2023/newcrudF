@@ -214,11 +214,12 @@ const DishCard = ({
 
         {/* Price */}
         <div
-          className="text-sm bg-indigo-600 mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2"
+          className={`text-sm ${selectedServingInfo?.Url ? 'bg-indigo-600' : 'bg-orange-500'} mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2`}
           onClick={openModal}
         >
           <strong>Price: ${selectedServingInfo?.price || "N/A"}</strong>
         </div>
+
 
         {/* Dates */}
         <div
@@ -335,7 +336,7 @@ const DishCard = ({
               </div>
             </div>
 
-            <div className="text-sm bg-indigo-600 mx-32 mb-2 shadow-lg text-center rounded-sm py-3 text-white mt-2">
+            <div className={`text-sm ${selectedServingInfo?.Url ? 'bg-indigo-600' : 'bg-orange-500'} mx-32 mb-2 shadow-lg text-center rounded-sm py-3 text-white mt-2`}>
               <strong>Price: ${selectedServingInfo?.price || "N/A"}</strong>
             </div>
 
