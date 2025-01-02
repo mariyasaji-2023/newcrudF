@@ -114,7 +114,7 @@ const RestaurantCategories = () => {
   const fetchRestaurants = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('${baseUrl}/api/restaurants/Categories', {
+      const response = await axios.get(`${baseUrl}/api/restaurants/Categories`, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
