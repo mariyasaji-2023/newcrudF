@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Edit, Trash2, X } from 'lucide-react';
 import axios from 'axios';
+const baseUrl = import.meta.env.VITE_APP_BASE_URL;
 
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, categoryName }) => {
   if (!isOpen) return null;
@@ -113,7 +114,7 @@ const RestaurantCategories = () => {
   const fetchRestaurants = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3001/api/restaurants/Categories', {
+      const response = await axios.get('${baseUrl}/api/restaurants/Categories', {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -136,7 +137,7 @@ const RestaurantCategories = () => {
 
   const handleUpdateCategory = async (categoryId, newName) => {
     try {
-      const response = await axios.put(`http://localhost:3001/api/restaurants/updateCategory`, {
+      const response = await axios.put(`${baseUrl}/api/restaurants/updateCategory`, {
         categoryId,
         name: newName
       });
@@ -160,7 +161,7 @@ const RestaurantCategories = () => {
 
   const handleDeleteCategory = async (categoryId) => {
     try {
-      await axios.delete(`http://localhost:3001/api/restaurants/delete/${categoryId}`);
+      await axios.delete(`${baseUrl}/api/restaurants/delete/${categoryId}`);
       
       // Update local state to remove the deleted category
       const updatedRestaurants = restaurants.map(restaurant => ({
