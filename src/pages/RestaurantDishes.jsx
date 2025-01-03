@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { MdAddCircleOutline, MdClear, MdArrowUpward } from "react-icons/md";
+import { AlertCircle } from 'lucide-react';
 import DishCard from "../components/DishCard";
 import AddDishPopup from "../components/AddorEditDishPopup";
-import { MdAddCircleOutline, MdClear, MdArrowUpward } from "react-icons/md";
 import SearchDish from "../components/SearchDish";
 
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
@@ -20,7 +21,21 @@ const RestaurantDishes = () => {
   const [searchResults, setSearchResults] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [missingUrlCount, setMissingUrlCount] = useState(0);
 
+  useEffect(() => {
+    const getMissingUrlCount = () => {
+      let count = 0;
+      dishes.forEach(dish => {
+        if (!dish.servingInfos?.[0]?.servingInfo?.Url) {
+          count++;
+        }
+      });
+      setMissingUrlCount(count);
+    };
+  
+    getMissingUrlCount();
+  }, [dishes]);
   // Fetch dish count separately
   const fetchDishCount = async () => {
     try {
@@ -259,6 +274,14 @@ const RestaurantDishes = () => {
           className="fixed bottom-4 z-40 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-transform transform hover:scale-110"
         >
           <MdArrowUpward className="text-2xl" />
+        </button>
+      )}
+       {missingUrlCount > 0 && (
+        <button
+          className="fixed bottom-4 left-4 z-40 bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-transform transform hover:scale-110 flex items-center gap-2"
+        >
+          <AlertCircle className="h-5 w-5" />
+          <span className="font-bold">{missingUrlCount}</span>
         </button>
       )}
     </div>
