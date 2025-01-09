@@ -8,6 +8,17 @@ import AddorEditRestaurantPopup from "../components/AddorEditRestaurantPopup";
 import DeleteRestaurantPopup from "../components/DeleteRestaurantPopup";
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
 
+
+{/* Add this helper function in your component */}
+const isValidUrl = (string) => {
+  try {
+    // Check if the string starts with http:// or https://
+    return string.startsWith('http://') || string.startsWith('https://');
+  } catch (error) {
+    return false;
+  }
+};
+
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,57 +203,63 @@ const Restaurants = () => {
         </span>
       </div>
 
-
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 mx-8">
-        {loading && <p>Loading...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-        {restaurants.length > 0
-          ? restaurants.map((restaurant) => (
-            <div
-              key={restaurant._id}
-              className="bg-slate-100 rounded-xl mb-4 shadow-xl hover:shadow-2xl transform transition-all duration-500 hover:scale-105 overflow-hidden"
-            >
-              <div className="relative">
-                <Link to={`/restaurant/${restaurant._id}`}>
-                  <img
-                    className="rounded-t-xl w-full h-40 object-cover"
-                    src={`${baseUrl}/public${restaurant.logo}`}
-                    alt={restaurant.name}
-                  />
-                </Link>
-                {/* Edit Button */}
-                <button
-                  className="absolute top-2 right-2 p-2 bg-green-700 text-white rounded-full hover:bg-green-800 transition duration-300 transform hover:scale-110"
-                  onClick={() => handleEditClick(restaurant)}
-                >
-                  <CiEdit className="text-lg" />
-                </button>
-                {/* Delete Button */}
-                <button
-                  className="absolute top-2 left-2 p-2 bg-red-700 text-white rounded-full hover:bg-red-800 transition duration-300 transform hover:scale-110"
-                  onClick={() => handleDeleteClick(restaurant)}
-                >
-                  <MdDelete className="text-lg" />
-                </button>
-              </div>
-              <div className="p-4 space-y-2">
-                <h1 className="mt-2 font-bold text-xl text-center hover:text-green-600 transition duration-300">
-                  <Link to={`/restaurant/${restaurant._id}`}>
-                    {restaurant.restaurantName}
-                  </Link>
-                </h1>
-                <p className="mt-1 text-xs text-center text-gray-500">
-                  Created At : {formatDate(restaurant.createdAt)}
-                </p>
-                <p className="mt-1 text-xs text-center text-gray-500">
-                  Updated At : {formatDate(restaurant.updatedAt)}
-                </p>
-              </div>
-            </div>
-          ))
-          : !loading && <p>No restaurants available</p>}
+  {loading && <p>Loading...</p>}
+  {error && <p className="text-red-500">{error}</p>}
+  {restaurants.length > 0
+    ? restaurants.map((restaurant) => (
+      <div
+        key={restaurant._id}
+        className="bg-slate-100 rounded-xl mb-4 shadow-xl hover:shadow-2xl transform transition-all duration-500 hover:scale-105 overflow-hidden"
+      >
+        <div className="relative">
+          <Link to={`/restaurant/${restaurant._id}`}>
+            <img
+              className="rounded-t-xl w-full h-40 object-cover"
+              src={
+                isValidUrl(restaurant.logo) 
+                  ? restaurant.logo 
+                  : `${baseUrl}/public${restaurant.logo}`
+              }
+              alt={restaurant.restaurantName}
+              onError={(e) => {
+                e.target.src = '/default-restaurant.png'; // Replace with your default image path
+                e.target.onerror = null;
+              }}
+            />
+          </Link>
+          {/* Edit Button */}
+          <button
+            className="absolute top-2 right-2 p-2 bg-green-700 text-white rounded-full hover:bg-green-800 transition duration-300 transform hover:scale-110"
+            onClick={() => handleEditClick(restaurant)}
+          >
+            <CiEdit className="text-lg" />
+          </button>
+          {/* Delete Button */}
+          <button
+            className="absolute top-2 left-2 p-2 bg-red-700 text-white rounded-full hover:bg-red-800 transition duration-300 transform hover:scale-110"
+            onClick={() => handleDeleteClick(restaurant)}
+          >
+            <MdDelete className="text-lg" />
+          </button>
+        </div>
+        <div className="p-4 space-y-2">
+          <h1 className="mt-2 font-bold text-xl text-center hover:text-green-600 transition duration-300">
+            <Link to={`/restaurant/${restaurant._id}`}>
+              {restaurant.restaurantName}
+            </Link>
+          </h1>
+          <p className="mt-1 text-xs text-center text-gray-500">
+            Created At : {formatDate(restaurant.createdAt)}
+          </p>
+          <p className="mt-1 text-xs text-center text-gray-500">
+            Updated At : {formatDate(restaurant.updatedAt)}
+          </p>
+        </div>
       </div>
-
+    ))
+    : !loading && <p>No restaurants available</p>}
+</div>
 
       <div className="flex justify-center items-center space-x-4 mb-6 mt-6">
         <button
