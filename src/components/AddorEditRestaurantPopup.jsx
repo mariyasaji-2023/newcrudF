@@ -33,54 +33,59 @@ const AddorEditRestaurantPopup = ({
     }
   }, [restaurant]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+// In AddorEditRestaurantPopup.jsx
 
-    if (!formState.restaurantName.trim()) {
-      setFormState(prev => ({ ...prev, error: "Restaurant name is required." }));
-      return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!formState.restaurantName.trim()) {
+    setFormState(prev => ({ ...prev, error: "Restaurant name is required." }));
+    return;
+  }
+
+  if (formState.uploadType === 'url' && formState.logoUrl && !isValidUrl(formState.logoUrl)) {
+    setFormState(prev => ({ ...prev, error: "Please enter a valid URL for the logo." }));
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("restaurantName", formState.restaurantName.trim());
+
+    if (formState.uploadType === 'url' && formState.logoUrl) {
+      formData.append("logo", formState.logoUrl.trim());
+    } else if (formState.logoFile) {
+      formData.append("logo", formState.logoFile);
     }
 
-    if (formState.uploadType === 'url' && formState.logoUrl && !isValidUrl(formState.logoUrl)) {
-      setFormState(prev => ({ ...prev, error: "Please enter a valid URL for the logo." }));
-      return;
+    const config = {
+      headers: { "Content-Type": "multipart/form-data" },
+    };
+
+    let response;
+    if (mode === "edit" && restaurant?._id) {
+      response = await axios.put(
+        `${baseUrl}/api/restaurants/editRestaurant/${restaurant._id}`,
+        formData,
+        config
+      );
+    } else {
+      response = await axios.post(
+        `${baseUrl}/api/restaurants/createRestaurant`,
+        formData,
+        config
+      );
     }
 
-    try {
-      const formData = new FormData();
-      formData.append("restaurantName", formState.restaurantName.trim());
+    // Call updateRestaurantList without passing the response data
+    // Let the parent component handle the refresh
+    updateRestaurantList();
+    closePopup();
+  } catch (err) {
+    handleError(err);
+  }
+};
 
-      if (formState.uploadType === 'url' && formState.logoUrl) {
-        formData.append("logo", formState.logoUrl.trim());
-      } else if (formState.logoFile) {
-        formData.append("logo", formState.logoFile);
-      }
-
-      const config = {
-        headers: { "Content-Type": "multipart/form-data" },
-      };
-
-      let response;
-      if (mode === "edit" && restaurant?._id) {
-        response = await axios.put(
-          `${baseUrl}/api/restaurants/editRestaurant/${restaurant._id}`,
-          formData,
-          config
-        );
-      } else {
-        response = await axios.post(
-          `${baseUrl}/api/restaurants/createRestaurant`,
-          formData,
-          config
-        );
-      }
-
-      updateRestaurantList(response.data.restaurant);
-      closePopup();
-    } catch (err) {
-      handleError(err);
-    }
-  };
 
   const handleError = (err) => {
     const errorMessage = err.response?.data?.message || 

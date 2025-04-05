@@ -22,21 +22,43 @@ const AddDishPopup = ({
   const [servingInfos, setServingInfos] = useState([]);
   const [backendMessage, setBackendMessage] = useState("");
 
-  // Initialize form with dish data if in edit mode----------->
+  // Define fetchCategoriesWithCacheBusting function
+  const fetchCategoriesWithCacheBusting = async () => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}?_nocache=${Date.now()}`
+      );
+      const fetchedCategories = response.data.categories || [];
+      setCategories(fetchedCategories);
+
+      if (mode === "edit" && dish?.categoryId) {
+        const selectedCategory = fetchedCategories.find(
+          (cat) => cat.categoryId === dish.categoryId
+        );
+        if (selectedCategory) {
+          setSubCategories(selectedCategory.subCategories || []);
+          setSelectedCategoryId(dish.categoryId);
+          setSelectedSubCategoryId(dish.subCategoryId || "");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setBackendMessage("Error fetching categories.");
+    }
+  };
+
+  // 1. Initialize form data from dish (if in edit mode)
   useEffect(() => {
     if (mode === "edit" && dish) {
       setDishName(dish.dishName || "");
       setDescription(dish.description || "");
-
-      // Store both current and selected category IDs----------->
       setSelectedCategoryId(dish.categoryId || "");
       setSelectedSubCategoryId(dish.subCategoryId || "");
 
-      // Transform serving infos to match form structure----->
       const transformedServingInfos =
         dish.servingInfos?.map((info) => ({
           size: info.servingInfo?.size || "",
-          Url: info.servingInfo?. Url|| "",
+          Url: info.servingInfo?.Url || "",
           nutritionFacts: {
             calories: info.servingInfo?.nutritionFacts?.calories?.value || "",
             protein: info.servingInfo?.nutritionFacts?.protein?.value || "",
@@ -48,69 +70,66 @@ const AddDishPopup = ({
     }
   }, [mode, dish]);
 
+  // 2. Fetch categories when component mounts or restaurantId/mode/dish changes
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(
-          `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
-        );
-        const fetchedCategories = response.data.categories || [];
-        setCategories(fetchedCategories);
-
-        if (mode === "edit" && dish?.categoryId) {
-          const selectedCategory = fetchedCategories.find(
-            (cat) => cat.categoryId === dish.categoryId
-          );
-          if (selectedCategory) {
-            setSubCategories(selectedCategory.subCategories || []);
-            setSelectedCategoryId(dish.categoryId);
-            setSelectedSubCategoryId(dish.subCategoryId || "");
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        setBackendMessage("Error fetching categories.");
-      }
-    };
-
-    fetchCategories();
+    fetchCategoriesWithCacheBusting();
   }, [restaurantId, mode, dish]);
 
+  // 3. Update subcategories when selected category changes
   useEffect(() => {
     if (selectedCategoryId) {
       const selectedCategory = categories.find(
         (cat) => cat.categoryId === selectedCategoryId
       );
       setSubCategories(selectedCategory?.subCategories || []);
-      setSelectedSubCategoryId(dish?.subCategoryId || ""); // Set subcategory if already exists
+      if (mode !== "edit") {
+        // Only reset subcategory when not in edit mode
+        setSelectedSubCategoryId("");
+      }
     }
-  }, [selectedCategoryId, categories, dish]);
+  }, [selectedCategoryId, categories, mode]);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
-
+  
     try {
+      setBackendMessage("Adding category...");
+      
+      // Add a cache-busting parameter to the request
       const response = await axios.put(
-        `${baseUrl}/api/restaurants/createCategory/${restaurantId}`,
+        `${baseUrl}/api/restaurants/createCategory/${restaurantId}?_nocache=${Date.now()}`,
         { categoryName: newCategory }
       );
-
+      
+      // Check if the response includes the newly created category
+      const newCategoryData = response.data.category;
+      
+      // Fetch the updated categories directly with a cache-busting parameter
       const updatedCategoriesResponse = await axios.get(
-        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}?_nocache=${Date.now()}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
+      
+      // Update the categories in state
       setCategories(updatedCategories);
-
+      
+      // Clear the input
       setNewCategory("");
-
+      
+      // Find the newly created category in the updated list
       const newlyAddedCategory = updatedCategories.find(
         (cat) => cat.categoryName === newCategory
       );
+      
       if (newlyAddedCategory) {
+        // Select the newly added category
         setSelectedCategoryId(newlyAddedCategory.categoryId);
+        // Clear any subcategories since we've changed categories
         setSubCategories(newlyAddedCategory.subCategories || []);
         setSelectedSubCategoryId("");
       }
+      
+      setBackendMessage(""); // Clear any message
     } catch (error) {
       console.error(
         "Error adding category:",
@@ -119,40 +138,49 @@ const AddDishPopup = ({
       setBackendMessage("Error adding category.");
     }
   };
-
+ 
   const handleAddSubCategory = async () => {
     if (!newSubCategory.trim() || !selectedCategoryId) return;
 
     try {
-      // Add the new subcategory------->
+      setBackendMessage("Adding subcategory...");
+      
+      // Add the new subcategory with a cache-busting parameter
       await axios.put(
-        `${baseUrl}/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}`,
+        `${baseUrl}/api/restaurants/createSubcategory/${restaurantId}/${selectedCategoryId}?_nocache=${Date.now()}`,
         { subCategoryName: newSubCategory }
       );
 
-      // Fetch the updated categories----->
+      // Fetch the updated categories with a cache-busting parameter
       const updatedCategoriesResponse = await axios.get(
-        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
+        `${baseUrl}/api/restaurants/allDishes/${restaurantId}?_nocache=${Date.now()}`
       );
       const updatedCategories = updatedCategoriesResponse.data.categories || [];
 
-      // Find the updated category---------->
+      // Update the categories in state
+      setCategories(updatedCategories);
+      
+      // Find the updated category
       const updatedCategory = updatedCategories.find(
         (cat) => cat.categoryId === selectedCategoryId
       );
+      
       if (updatedCategory) {
+        // Update subcategories
         setSubCategories(updatedCategory.subCategories || []);
 
-        // Find the newly added subcategory and set it as selected----->
+        // Find the newly added subcategory and select it
         const newlyAddedSubCategory = updatedCategory.subCategories.find(
           (subCat) => subCat.subCategoryName === newSubCategory
         );
+        
         if (newlyAddedSubCategory) {
           setSelectedSubCategoryId(newlyAddedSubCategory.subCategoryId);
         }
       }
 
-      setNewSubCategory(""); // Clear the new subcategory input
+      setNewSubCategory(""); // Clear the input
+      setBackendMessage(""); // Clear any message
     } catch (error) {
       console.error(
         "Error adding subcategory:",
@@ -218,12 +246,12 @@ const AddDishPopup = ({
     e.preventDefault();
     console.log("Form submitted!");
     setBackendMessage("");
-
+  
     const dishData = {
       dishName: dishName,
       description: description,
-      originalCategoryId: dish?.categoryId || "", // Ensure the categoryId is always a string, even if undefined
-      originalSubCategoryId: dish?.subCategoryId || "", // Default to empty string if undefined
+      originalCategoryId: dish?.categoryId || "", 
+      originalSubCategoryId: dish?.subCategoryId || "",
       servingInfos: servingInfos.map((info) => ({
         size: info.size,
         Url: info.Url,
@@ -235,33 +263,38 @@ const AddDishPopup = ({
         },
       })),
     };
-
+  
     try {
       let response;
       if (mode === "edit") {
-        console.log("Editing dish with IDs:", {
-          dishId: dish._id,
-          newCategoryId: selectedCategoryId,
-          newSubCategoryId: selectedSubCategoryId,
-          originalCategoryId: dish?.categoryId,
-          originalSubCategoryId: dish?.subCategoryId,
-        });
-
         response = await axios.put(
-          `${baseUrl}/api/restaurants/editDish/${dish._id
-          }/${selectedCategoryId}/${selectedSubCategoryId || ""}`,
+          `${baseUrl}/api/restaurants/editDish/${dish._id}/${selectedCategoryId}/${selectedSubCategoryId || ""}?_nocache=${Date.now()}`,
           dishData
         );
       } else {
         response = await axios.put(
-          `${baseUrl}/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ""
-          }`,
+          `${baseUrl}/api/restaurants/createDish/${selectedCategoryId}/${selectedSubCategoryId || ""}?_nocache=${Date.now()}`,
           dishData
         );
       }
-
-      updateDishList(response.data.dish);
+  
+      // First close the popup immediately
       closePopup();
+      
+      // Then pass the complete dish object back to the parent component
+      // Include additional category information for immediate UI update
+      const dishWithCategoryInfo = {
+        ...response.data.dish,
+        // Ensure these fields are populated for UI organization
+        categoryId: selectedCategoryId,
+        subCategoryId: selectedSubCategoryId || ""
+      };
+      
+      // Call parent update function after a short delay to ensure popup is closed
+      setTimeout(() => {
+        updateDishList(dishWithCategoryInfo);
+      }, 10);
+      
     } catch (error) {
       console.error(
         "Error saving dish:",
@@ -269,8 +302,7 @@ const AddDishPopup = ({
       );
       setBackendMessage(
         error.response?.data?.message ||
-        `Error ${mode === "edit" ? "updating" : "adding"} dish. ${error.response?.data?.details || ""
-        }`
+        `Error ${mode === "edit" ? "updating" : "adding"} dish. ${error.response?.data?.details || ""}`
       );
     }
   };
@@ -429,6 +461,7 @@ const AddDishPopup = ({
                       handleChangeServingInfo(index, "size", e.target.value)
                     }
                     className="w-full p-2 border rounded-md no-spinner"
+                    required
                   />
                 </div>
 
@@ -437,14 +470,13 @@ const AddDishPopup = ({
                     <strong>Url </strong>
                   </label>
                   <input
-                    type="text" // Change from "number" to "text"
+                    type="text"
                     value={servingInfo.Url}
                     onChange={(e) =>
                       handleChangeServingInfo(index, "Url", e.target.value)
                     }
                     className="w-full p-2 border rounded-md"
                   />
-
                 </div>
 
                 <div>
@@ -469,6 +501,7 @@ const AddDishPopup = ({
                           )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
+                        required
                       />
                     </div>
 
@@ -489,6 +522,7 @@ const AddDishPopup = ({
                           )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
+                        required
                       />
                     </div>
 
@@ -509,6 +543,7 @@ const AddDishPopup = ({
                           )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
+                        required
                       />
                     </div>
 
@@ -529,12 +564,27 @@ const AddDishPopup = ({
                           )
                         }
                         className="w-full p-2 border rounded-md no-spinner"
+                        required
                       />
                     </div>
                   </div>
                 </div>
               </div>
             ))}
+
+            {/* Add serving info if none exists */}
+            {servingInfos.length === 0 && (
+              <div className="bg-blue-50 p-4 rounded-md text-center">
+                <p className="text-blue-600 mb-2">At least one serving info is required</p>
+                <button
+                  type="button"
+                  onClick={handleAddServingInfo}
+                  className="p-2 bg-blue-500 text-white rounded-md"
+                >
+                  Add Serving Info
+                </button>
+              </div>
+            )}
 
             {/* Backend Message Display */}
             {backendMessage && (
@@ -544,16 +594,19 @@ const AddDishPopup = ({
             )}
 
             <div className="flex justify-between items-center">
-              <button
-                type="button"
-                onClick={handleAddServingInfo}
-                className="p-2 bg-blue-500 text-white rounded-md"
-              >
-                Add Serving Info
-              </button>
+              {servingInfos.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleAddServingInfo}
+                  className="p-2 bg-blue-500 text-white rounded-md"
+                >
+                  Add Serving Info
+                </button>
+              )}
               <button
                 type="submit"
                 className="p-2 bg-green-500 text-white rounded-md"
+                disabled={servingInfos.length === 0}
               >
                 {mode === "add" ? "Add Dish" : "Update Dish"}
               </button>

@@ -10,45 +10,48 @@ const DeleteRestaurantPopup = ({
   const [deleteInput, setDeleteInput] = useState("");
   const [error, setError] = useState(""); // State for validation errors
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
 
-    // Validate delete input
-    if (!deleteInput) {
-      setError("Delete ID is required.");
-      return;
-    }
+  // In DeleteRestaurantPopup.jsx
 
-    // Clear previous errors
-    setError("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const response = await fetch(
-        `${baseUrl}/api/restaurants/deleteRestaurant/${restaurant._id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json", // Correct content type for sending JSON
-          },
-          body: JSON.stringify({ deleteId: deleteInput }),
-        }
-      );
+  // Validate delete input
+  if (!deleteInput) {
+    setError("Delete ID is required.");
+    return;
+  }
 
-      const data = await response.json();
+  // Clear previous errors
+  setError("");
 
-      if (!response.ok) {
-        // Handle error responses from the server
-        throw new Error(data.message || "Failed to delete restaurant");
+  try {
+    const response = await fetch(
+      `${baseUrl}/api/restaurants/deleteRestaurant/${restaurant._id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ deleteId: deleteInput }),
       }
+    );
 
-      // Update restaurant list and close popup
-      updateRestaurantList(data.restaurantId);
-      closePopup();
-    } catch (err) {
-      console.error("Error deleting the restaurant:", err);
-      setError(err.message || "An unexpected error occurred.");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to delete restaurant");
     }
-  };
+
+    // Call updateRestaurantList without passing the restaurant ID
+    // Let the parent component handle the refresh
+    updateRestaurantList();
+    closePopup();
+  } catch (err) {
+    console.error("Error deleting the restaurant:", err);
+    setError(err.message || "An unexpected error occurred.");
+  }
+};
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

@@ -1,365 +1,226 @@
-import React, { useState, useEffect } from "react";
-import { MdEdit, MdDelete } from "react-icons/md";
-import DeleteDishPopup from "./DeleteDishPopup";
-import AddDishPopup from "./AddorEditDishPopup";
-import axios from "axios";
+// Update the DishCard.jsx component with better default image handling
 
-const baseUrl = import.meta.env.VITE_APP_BASE_URL;
-//abc
-const DishCard = ({
-  dish = {},
-  categoryName = "N/A",
-  subCategoryName = "N/A",
-  restaurantId,
-  setDishes,
-  setCategories,
-  onDishUpdate,
-}) => {
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
-  const [showEditPopup, setShowEditPopup] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+import React, { useState } from "react";
+import { MdEdit, MdDelete, MdNoPhotography } from "react-icons/md";
+import { Flame, ImageOff } from 'lucide-react';
+import AddorEditDishPopup from "./AddorEditDishPopup";
+import DeleteDishPopup from "./DeleteDishPopup";
+import NutritionModal from "./NutritionModal";
+import { api, apiCache } from "../pages/RestaurantDishes"; // Import api and apiCache
+
+const DishCard = ({ dish, categoryName, subCategoryName, restaurantId, onDishUpdate }) => {
+  const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
+  const [isDeletePopupVisible, setIsDeletePopupVisible] = useState(false);
+  const [isNutritionModalVisible, setIsNutritionModalVisible] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [selectedServingInfo, setSelectedServingInfo] = useState(
     dish.servingInfos?.[0]?.servingInfo || null
   );
 
-  useEffect(() => {
+  // Set selected serving info when dish changes
+  React.useEffect(() => {
     setSelectedServingInfo(dish.servingInfos?.[0]?.servingInfo || null);
+    setImageError(false); // Reset image error state when dish changes
   }, [dish]);
 
-  const {
-    dishName = "Dish Name",
-    description = "No description provided",
-    servingInfos = [],
-    createdAt,
-    updatedAt,
-  } = dish;
+  // Function to handle dish update with proper cache invalidation
+  const handleDishUpdate = async () => {
+    try {
+      // First, clear the entire cache to ensure complete refresh
+      apiCache.clearAll();
+      
+      // Call parent's update function - this should trigger a full refetch
+      if (onDishUpdate) {
+        await onDishUpdate();
+      }
+      
+      // Close any open popups
+      setIsEditPopupVisible(false);
+      setIsDeletePopupVisible(false);
+    } catch (error) {
+      console.error("Error updating dish data:", error);
+    }
+  };
 
+  // Helper to check if URL is valid
+  const isValidUrl = (url) => {
+    return url && (url.startsWith("http://") || url.startsWith("https://"));
+  };
+
+  // Generate a placeholder background if no image is available
+  const getPlaceholderStyle = () => {
+    // Use the dish name to create a consistent color
+    const hash = dish.dishName.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+    const hue = hash % 360;
+    
+    return {
+      backgroundColor: `hsl(${hue}, 70%, 85%)`,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '100%',
+      height: '100%',
+      color: `hsl(${hue}, 70%, 30%)`,
+      fontSize: '1rem',
+      textAlign: 'center',
+      padding: '1rem'
+    };
+  };
+
+  // Helper to get image URL or default
+  const getImageUrl = () => {
+    if (!selectedServingInfo || !selectedServingInfo.Url || !isValidUrl(selectedServingInfo.Url)) {
+      return null; // Return null to use placeholder
+    }
+    
+    return selectedServingInfo.Url;
+  };
+
+  // Format price with currency symbol
+  const formatPrice = (price) => {
+    return price ? `$${parseFloat(price).toFixed(2)}` : "N/A";
+  };
+
+  // Handle serving size change
   const handleServingSizeChange = (servingInfo) => {
     setSelectedServingInfo(servingInfo.servingInfo);
+    setImageError(false); // Reset error state when changing serving size
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    const options = {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return date.toLocaleString("en-US", options);
+  // Handle image load error
+  const handleImageError = () => {
+    setImageError(true);
   };
-
-  const handleDeleteClick = () => setShowDeletePopup(true);
-  const handleEditClick = (e) => {
-    e.stopPropagation();
-    setShowEditPopup(true);
-  };
-
-  const closePopup = () => {
-    setShowDeletePopup(false);
-    setShowEditPopup(false);
-  };
-
-  const handleDeleteSuccess = async () => {
-    if (onDishUpdate) {
-      await onDishUpdate();
-    } else {
-      await updateDishList();
-    }
-    closePopup();
-  };
-
-  const handleEditSuccess = async () => {
-    if (onDishUpdate) {
-      await onDishUpdate();
-      // Reset selected serving info after update
-      setSelectedServingInfo(dish.servingInfos?.[0]?.servingInfo || null);
-    }
-    closePopup();
-  };
-
-  const updateDishList = async () => {
-    try {
-      const response = await axios.get(
-        `${baseUrl}/api/restaurants/allDishes/${restaurantId}`
-      );
-      setDishes(response.data.dishes || []);
-      setCategories(response.data.categories || []);
-    } catch (err) {
-      console.error("Error refreshing dishes:", err);
-    }
-  };
-
-  const openModal = () => setShowModal(true);
-  const closeModal = () => setShowModal(false);
-
-  const truncateDescription = (text, wordLimit = 150) => {
-    const words = text.split(" ");
-    if (words.length > wordLimit) {
-      return words.slice(0, wordLimit).join(" ") + "...";
-    }
-    return text;
-  };
-
-  const limitedDescription = truncateDescription(description);
-
-  if (!servingInfos.length) {
-    return (
-      <div className="bg-white p-4 rounded-lg shadow-md text-center">
-        <p>No serving information available for this dish.</p>
-      </div>
-    );
-  }
 
   return (
-    <div>
-      <div className="relative bg-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer max-w-xs">
-        {/* Dish Name and Actions */}
-        <div className="flex justify-between items-center mb-3">
-          <h3
-            className="font-semibold text-xl text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap"
-            title={dishName}
-            onClick={openModal}
+    <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+      <div className="relative h-48 overflow-hidden">
+        {getImageUrl() && !imageError ? (
+          <img
+            src={getImageUrl()}
+            alt={dish.dishName}
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            onError={handleImageError}
+          />
+        ) : (
+          <div style={getPlaceholderStyle()}>
+            <ImageOff className="w-10 h-10 mb-2" />
+            <div>
+              <p className="font-semibold">{dish.dishName}</p>
+              <p className="text-xs mt-1">No image available</p>
+            </div>
+          </div>
+        )}
+        
+        <div className="absolute top-0 right-0 p-2 flex space-x-2">
+          <button
+            onClick={() => setIsEditPopupVisible(true)}
+            className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+            title="Edit dish"
           >
-            <strong>{dishName}</strong>
-          </h3>
-          <div className="flex space-x-2">
-            <button
-              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-transform duration-300 transform hover:scale-110"
-              onClick={handleEditClick}
-            >
-              <MdEdit />
-            </button>
-            <button
-              className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-transform duration-300 transform hover:scale-110"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteClick();
-              }}
-            >
-              <MdDelete />
-            </button>
-          </div>
-        </div>
-
-        {/* Category and Subcategory */}
-        <div className="text-sm flex justify-between text-gray-600">
-          <p>
-            <strong>Category:</strong>
-          </p>
-          <p>
-            <strong>{categoryName}</strong>
-          </p>
-        </div>
-        <div className="text-sm flex justify-between text-gray-600 mb-2">
-          <p>
-            <strong>Subcategory:</strong>
-          </p>
-          <p>
-            <strong>{subCategoryName}</strong>
-          </p>
-        </div>
-
-        {/* Serving Sizes Selection */}
-        <div className="grid grid-cols-3 gap-2 justify-between space-x-2 mb-4">
-          {servingInfos.map((info, index) => (
-            <button
-              key={index}
-              onClick={() => handleServingSizeChange(info)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${
-                selectedServingInfo?.size === info.servingInfo.size
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-              }`}
-              title={info.servingInfo.size}
-            >
-              {info.servingInfo.size.slice(0, 5)}
-            </button>
-          ))}
-        </div>
-
-        {/* Nutritional Facts */}
-        <div className="grid grid-cols-2 gap-2 mt-4" onClick={openModal}>
-          <div className="bg-blue-100 text-blue-800 p-3 rounded-lg shadow-md text-center">
-            <p className="text-sm font-semibold">Calories</p>
-            <p className="text-lg">
-              {selectedServingInfo?.nutritionFacts?.calories?.value || "N/A"}{" "}
-              {selectedServingInfo?.nutritionFacts?.calories?.unit || ""}
-            </p>
-          </div>
-          <div className="bg-green-100 text-green-800 p-3 rounded-lg shadow-md text-center">
-            <p className="text-sm font-semibold">Protein</p>
-            <p className="text-lg">
-              {selectedServingInfo?.nutritionFacts?.protein?.value || "N/A"}{" "}
-              {selectedServingInfo?.nutritionFacts?.protein?.unit || ""}
-            </p>
-          </div>
-          <div className="bg-yellow-100 text-yellow-800 p-3 rounded-lg shadow-md text-center">
-            <p className="text-sm font-semibold">Carbs</p>
-            <p className="text-lg">
-              {selectedServingInfo?.nutritionFacts?.carbs?.value || "N/A"}{" "}
-              {selectedServingInfo?.nutritionFacts?.carbs?.unit || ""}
-            </p>
-          </div>
-          <div className="bg-red-100 text-red-800 p-3 rounded-lg shadow-md text-center">
-            <p className="text-sm font-semibold">Fat</p>
-            <p className="text-lg">
-              {selectedServingInfo?.nutritionFacts?.totalFat?.value || "N/A"}{" "}
-              {selectedServingInfo?.nutritionFacts?.totalFat?.unit || ""}
-            </p>
-          </div>
-        </div>
-
-        {/* Price */}
-        <div
-          className={`text-sm ${selectedServingInfo?.Url ? 'bg-indigo-600' : 'bg-orange-500'} mx-10 shadow-lg text-center rounded-sm py-1 text-white mt-2`}
-          onClick={openModal}
-        >
-          <strong>Price: ${selectedServingInfo?.price || "N/A"}</strong>
-        </div>
-
-
-        {/* Dates */}
-        <div
-          className="text-xs flex text-gray-400 mt-1 justify-between"
-          onClick={openModal}
-        >
-          <p>
-            <strong>Created At:</strong> {formatDate(createdAt)}
-          </p>
-          <p>
-            <strong>Updated At:</strong> {formatDate(updatedAt)}
-          </p>
+            <MdEdit />
+          </button>
+          <button
+            onClick={() => setIsDeletePopupVisible(true)}
+            className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors"
+            title="Delete dish"
+          >
+            <MdDelete />
+          </button>
         </div>
       </div>
 
-      {/* Popups and Modals */}
-      {showDeletePopup && (
-        <DeleteDishPopup
-          restaurantId={restaurantId}
-          dish={dish}
-          closePopup={closePopup}
-          onDeleteSuccess={handleDeleteSuccess}
-        />
-      )}
+      <div className="p-4 flex-grow">
+        <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+          {dish.dishName}
+        </h3>
+        
+        {dish.description && (
+          <p className="text-gray-600 text-sm mb-3 line-clamp-3">
+            {dish.description}
+          </p>
+        )}
 
-      {showEditPopup && (
-        <AddDishPopup
-          mode="edit"
-          dish={dish}
-          closePopup={closePopup}
-          updateDishList={handleEditSuccess}
-          restaurantId={restaurantId}
-        />
-      )}
+        {/* Serving Sizes Selection */}
+        {dish.servingInfos && dish.servingInfos.length > 1 && (
+          <div className="grid grid-cols-3 gap-2 justify-between space-x-2 mb-4">
+            {dish.servingInfos.map((info, index) => (
+              <button
+                key={index}
+                onClick={() => handleServingSizeChange(info)}
+                className={`px-3 py-1 rounded-full text-sm transition-colors duration-300 ${
+                  selectedServingInfo?.size === info.servingInfo.size
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-800 hover:bg-blue-200"
+                }`}
+                title={info.servingInfo.size}
+              >
+                {info.servingInfo.size.slice(0, 5)}
+              </button>
+            ))}
+          </div>
+        )}
 
-      {/* Detailed Modal View */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg max-w-lg w-full">
-            <h3 className="text-2xl font-bold mb-4">{dishName}</h3>
-
-            <div className="mb-4 text-gray-700 overflow-y-auto max-h-60">
-              {limitedDescription.split("\n").map((line, index) => (
-                <p key={index} className="mb-1">
-                  {line}
-                </p>
-              ))}
-            </div>
-
-            <div className="text-sm flex justify-between text-gray-600 mb-2">
-              <p>
-                <strong>Category:</strong>
+        <div className="mt-auto">
+          <div className="flex justify-between items-center">
+            {selectedServingInfo && (
+              <p className="text-lg font-bold text-green-600">
+                {formatPrice(selectedServingInfo.price)}
               </p>
-              <p>
-                <strong>{categoryName}</strong>
-              </p>
-            </div>
-            <div className="text-sm flex justify-between text-gray-600 mb-2">
-              <p>
-                <strong>Subcategory:</strong>
-              </p>
-              <p>
-                <strong>{subCategoryName}</strong>
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 justify-start space-x-2 mb-4">
-              {servingInfos.map((info, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleServingSizeChange(info)}
-                  className={`px-3 py-2 rounded-full text-sm transition-colors duration-300 ${
-                    selectedServingInfo?.size === info.servingInfo.size
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-blue-200"
-                  }`}
-                  title={info.servingInfo.size}
-                >
-                  {info.servingInfo.size}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-6 mb-4 mx-8">
-              <div className="bg-blue-100 text-blue-800 p-3 rounded-lg shadow-md text-center">
-                <p className="text-sm font-semibold">Calories</p>
-                <p className="text-lg">
-                  {selectedServingInfo?.nutritionFacts?.calories?.value ||
-                    "N/A"}{" "}
-                  {selectedServingInfo?.nutritionFacts?.calories?.unit || ""}
-                </p>
-              </div>
-              <div className="bg-green-100 text-green-800 p-3 rounded-lg shadow-md text-center">
-                <p className="text-sm font-semibold">Protein</p>
-                <p className="text-lg">
-                  {selectedServingInfo?.nutritionFacts?.protein?.value || "N/A"}{" "}
-                  {selectedServingInfo?.nutritionFacts?.protein?.unit || ""}
-                </p>
-              </div>
-              <div className="bg-yellow-100 text-yellow-800 p-3 rounded-lg shadow-md text-center">
-                <p className="text-sm font-semibold">Carbs</p>
-                <p className="text-lg">
-                  {selectedServingInfo?.nutritionFacts?.carbs?.value || "N/A"}{" "}
-                  {selectedServingInfo?.nutritionFacts?.carbs?.unit || ""}
-                </p>
-              </div>
-              <div className="bg-red-100 text-red-800 p-3 rounded-lg shadow-md text-center">
-                <p className="text-sm font-semibold">Fat</p>
-                <p className="text-lg">
-                  {selectedServingInfo?.nutritionFacts?.totalFat?.value ||
-                    "N/A"}{" "}
-                  {selectedServingInfo?.nutritionFacts?.totalFat?.unit || ""}
-                </p>
-              </div>
-            </div>
-
-            <div className={`text-sm ${selectedServingInfo?.Url ? 'bg-indigo-600' : 'bg-orange-500'} mx-32 mb-2 shadow-lg text-center rounded-sm py-3 text-white mt-2`}>
-              <strong>Price: ${selectedServingInfo?.price || "N/A"}</strong>
-            </div>
-
-            <div className="text-xs flex text-gray-400 mt-1 justify-between">
-              <p>
-                <strong>Created At:</strong> {formatDate(createdAt)}
-              </p>
-              <p>
-                <strong>Updated At:</strong> {formatDate(updatedAt)}
-              </p>
-            </div>
-
+            )}
+            
             <button
-              onClick={closeModal}
-              className="mt-4 p-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800"
+              onClick={() => setIsNutritionModalVisible(true)}
+              className="flex items-center text-sm text-orange-600 hover:text-orange-800 transition-colors"
+              title="View nutrition info"
             >
-              Close
+              <Flame className="h-4 w-4 mr-1" />
+              <span>Nutrition</span>
             </button>
           </div>
+          
+          <div className="mt-2 text-sm text-gray-500">
+            {categoryName && (
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
+                {categoryName}
+              </span>
+            )}
+            {subCategoryName && (
+              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                {subCategoryName}
+              </span>
+            )}
+          </div>
         </div>
+      </div>
+
+      {isEditPopupVisible && (
+        <AddorEditDishPopup
+          mode="edit"
+          dish={dish}
+          closePopup={() => setIsEditPopupVisible(false)}
+          updateDishList={handleDishUpdate}
+          restaurantId={restaurantId}
+        />
       )}
+
+      {isDeletePopupVisible && (
+        <DeleteDishPopup
+          dish={dish}
+          restaurantId={restaurantId}
+          closePopup={() => setIsDeletePopupVisible(false)}
+          onDeleteSuccess={handleDishUpdate}
+        />
+      )}
+
+      <NutritionModal
+        isOpen={isNutritionModalVisible}
+        onClose={() => setIsNutritionModalVisible(false)}
+        selectedServingInfo={selectedServingInfo}
+      />
     </div>
   );
 };
 
-export default DishCard;
+export default React.memo(DishCard);

@@ -1,6 +1,13 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 const baseUrl = import.meta.env.VITE_APP_BASE_URL;
+
+// Create api reference using the same axios instance with cache invalidation
+const api = axios.create({
+  baseURL: baseUrl,
+  headers: { 'Content-Type': 'application/json' }
+});
 
 const DeleteDishPopup = ({
   restaurantId,
@@ -10,6 +17,7 @@ const DeleteDishPopup = ({
 }) => {
   const [deleteInput, setDeleteInput] = useState("");
   const [error, setError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,26 +27,28 @@ const DeleteDishPopup = ({
       return;
     }
 
+    setIsDeleting(true);
+
     try {
-      const response = await fetch(
-        `${baseUrl}/api/restaurants/deleteDish/${restaurantId}/${dish._id}`,
+      // Use axios instead of fetch for consistency
+      const response = await api.delete(
+        `/api/restaurants/deleteDish/${restaurantId}/${dish._id}`,
         {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ deleteId: deleteInput }),
+          data: { deleteId: deleteInput }
         }
       );
 
-      const data = await response.json();
-
-      if (!response.ok)
-        throw new Error(data.message || "Failed to delete dish");
-
+      // Directly call onDeleteSuccess to refresh the data
       await onDeleteSuccess();
       closePopup();
     } catch (err) {
       console.error("Error deleting the dish:", err);
-      setError(err.message || "An unexpected error occurred.");
+      setError(
+        err.response?.data?.message || 
+        "Failed to delete dish. Please check your delete ID."
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -60,6 +70,7 @@ const DeleteDishPopup = ({
               value={deleteInput}
               onChange={(e) => setDeleteInput(e.target.value)}
               placeholder="Enter delete ID"
+              disabled={isDeleting}
             />
           </div>
 
@@ -68,16 +79,20 @@ const DeleteDishPopup = ({
           <div className="flex justify-between">
             <button
               type="button"
-              className="bg-gray-500 text-white py-2 px-4 rounded-lg"
+              className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
               onClick={closePopup}
+              disabled={isDeleting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-red-600 text-white py-2 px-4 rounded-lg"
+              className={`${
+                isDeleting ? "bg-red-400" : "bg-red-600 hover:bg-red-700"
+              } text-white py-2 px-4 rounded-lg transition-colors`}
+              disabled={isDeleting}
             >
-              Delete Dish
+              {isDeleting ? "Deleting..." : "Delete Dish"}
             </button>
           </div>
         </form>
